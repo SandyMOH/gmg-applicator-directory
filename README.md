@@ -1,0 +1,1 @@
+# gmg-applicator-directory
