@@ -1,0 +1,91 @@
+/* Applicator Directory Styles */
+
+.applicator-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+.applicator-search {
+    margin-bottom: 25px;
+}
+
+.applicator-search input {
+    width: 100%;
+    padding: 14px 18px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.applicator-search input:focus {
+    outline: none;
+    border-color: #2ea3f2;
+    box-shadow: 0 0 0 3px rgba(46, 163, 242, 0.15);
+}
+
+.applicator-map {
+    width: 100%;
+    height: 450px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.applicator-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.applicator-card {
+    background: #fff;
+    padding: 22px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #2ea3f2;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.applicator-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.applicator-card h3 {
+    margin: 0 0 12px;
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.applicator-card p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #555;
+    line-height: 1.5;
+}
+
+.app-label {
+    font-weight: 600;
+    color: #333;
+}
+
+.applicator-empty {
+    text-align: center;
+    padding: 40px;
+    color: #888;
+    font-style: italic;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .applicator-list {
+        grid-template-columns: 1fr;
+    }
+    .applicator-map {
+        height: 350px;
+    }
+}
