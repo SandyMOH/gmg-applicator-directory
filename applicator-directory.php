@@ -19,11 +19,12 @@ define( 'APPDIR_URL', plugin_dir_url( __FILE__ ) );
 class Applicator_Directory {
 
     public function __construct() {
-        add_shortcode( 'applicator_list', array( $this, 'render_shortcode' ) );
-        add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
-        add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
-        add_action( 'admin_init', array( $this, 'register_settings' ) );
-    }
+    add_shortcode( 'applicator_list', array( $this, 'render_shortcode' ) );
+    add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
+    add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+    add_action( 'admin_init', array( $this, 'register_settings' ) );
+    add_filter( 'acf/settings/google_api_key', array( $this, 'acf_google_api_key' ) );
+}
 
     public function register_assets() {
         wp_register_style( 'applicator-directory', APPDIR_URL . 'assets/css/applicator.css', array(), APPDIR_VERSION );
@@ -105,6 +106,10 @@ class Applicator_Directory {
 
     public function register_settings() {
         register_setting( 'appdir_settings', 'appdir_google_api_key' );
+    }
+
+    public function acf_google_api_key() {
+        return get_option( 'appdir_google_api_key', 'AIzaSyAnNNyXbvb1P8ttaw7EMD26Tv5ktBx_4RY' );
     }
 
     public function render_settings_page() {
