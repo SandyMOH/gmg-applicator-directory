@@ -3,7 +3,7 @@
  * Plugin Name:       Applicator Directory
  * Plugin URI:        https://github.com/SandyMOH/gmg-applicator-directory
  * Description:       Displays a searchable list and map of applicators using ACF fields. Use shortcode [applicator_list].
- * Version:           2.0.0
+ * Version:           1.1.0
  * Author:            Sandy Mohammad
  * License:           GPL v2 or later
  * Text Domain:       applicator-directory
@@ -12,29 +12,52 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 // Constants
-define( 'APPDIR_VERSION', '1.0.1' );
+define( 'APPDIR_VERSION', '1.1.0' );
 define( 'APPDIR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'APPDIR_URL', plugin_dir_url( __FILE__ ) );
 
 class Applicator_Directory {
 
     public function __construct() {
-    add_shortcode( 'applicator_list', array( $this, 'render_shortcode' ) );
-    add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
-    add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
-    add_action( 'admin_init', array( $this, 'register_settings' ) );
-    add_filter( 'acf/settings/google_api_key', array( $this, 'acf_google_api_key' ) );
-}
+        add_shortcode( 'applicator_list', array( $this, 'render_shortcode' ) );
+        add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
+        add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
+        add_action( 'admin_init', array( $this, 'register_settings' ) );
+        add_filter( 'acf/settings/google_api_key', array( $this, 'acf_google_api_key' ) );
+    }
+
+    /**
+     * Pass Google Maps API key to ACF for admin map fields
+     */
+    public function acf_google_api_key() {
+        return get_option( 'appdir_google_api_key', '' );
+    }
 
     public function register_assets() {
         wp_register_style( 'applicator-directory', APPDIR_URL . 'assets/css/applicator.css', array(), APPDIR_VERSION );
 
         $api_key = get_option( 'appdir_google_api_key', '' );
+
+        // Register Google Maps API (frontend)
         if ( ! empty( $api_key ) ) {
-            wp_register_script( 'google-maps-api', 'https://maps.googleapis.com/maps/api/js?key=' . esc_attr( $api_key ), array(), null, true );
+            wp_register_script(
+                'google-maps-api',
+                'https://maps.googleapis.com/maps/api/js?key=' . esc_attr( $api_key ) . '&libraries=places',
+                array(),
+                null,
+                true
+            );
         }
 
-        wp_register_script( 'applicator-directory', APPDIR_URL . 'assets/js/applicator.js', array( 'google-maps-api' ), APPDIR_VERSION, true );
+        // Register our JS — load even without Google Maps so search still works
+        $deps = ! empty( $api_key ) ? array( 'google-maps-api' ) : array();
+        wp_register_script(
+            'applicator-directory',
+            APPDIR_URL . 'assets/js/applicator.js',
+            $deps,
+            APPDIR_VERSION,
+            true
+        );
     }
 
     public function render_shortcode( $atts ) {
@@ -93,9 +116,14 @@ class Applicator_Directory {
             wp_reset_postdata();
         }
 
+        // Always pass data to JS, even if empty
         wp_localize_script( 'applicator-directory', 'applicatorData', $map_data );
 
+        // Debug: add a comment to help troubleshoot
+        $debug = '<!-- Applicator Directory v' . APPDIR_VERSION . ' | Applicators: ' . count($applicators) . ' | With location: ' . count($map_data) . ' | API key set: ' . ( get_option('appdir_google_api_key') ? 'yes' : 'no' ) . ' -->';
+
         ob_start();
+        echo $debug;
         include APPDIR_PATH . 'templates/applicator-list.php';
         return ob_get_clean();
     }
@@ -106,10 +134,6 @@ class Applicator_Directory {
 
     public function register_settings() {
         register_setting( 'appdir_settings', 'appdir_google_api_key' );
-    }
-
-    public function acf_google_api_key() {
-        return get_option( 'appdir_google_api_key', 'AIzaSyAnNNyXbvb1P8ttaw7EMD26Tv5ktBx_4RY' );
     }
 
     public function render_settings_page() {
@@ -124,7 +148,7 @@ class Applicator_Directory {
                         <td>
                             <input type="text" name="appdir_google_api_key" id="appdir_google_api_key"
                                 value="<?php echo esc_attr( get_option( 'appdir_google_api_key', '' ) ); ?>" class="regular-text">
-                            <p class="description">Get a key from <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>.</p>
+                            <p class="description">Get a key from <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>. Required APIs: Maps JavaScript API, Places API, Geocoding API.</p>
                         </td>
                     </tr>
                 </table>
@@ -135,7 +159,7 @@ class Applicator_Directory {
             <h2>Usage</h2>
             <p>Shortcode: <code>[applicator_list]</code></p>
             <p>Current version: <strong><?php echo APPDIR_VERSION; ?></strong></p>
-            <p><strong>Expected ACF fields:</strong> phone_number, license_number, email, address, location</p>
+            <p><strong>ACF fields:</strong> phone_number, license_number, email, address, location (Google Map)</p>
         </div>
         <?php
     }
