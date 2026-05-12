@@ -15,11 +15,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Show deployment info
+      - name: Remove non-deploy files
         run: |
-          echo "🚀 Deploying to Hostinger"
-          echo "📁 Target: ${{ secrets.SFTP_TARGET_PATH }}"
-          echo "🌿 Commit: ${{ github.sha }}"
+          rm -rf .git .github README.md .gitignore
+          ls -la
 
       - name: Deploy via SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
@@ -32,14 +31,6 @@ jobs:
           remote_path: ${{ secrets.SFTP_TARGET_PATH }}
           sftp_only: true
           delete_remote_files: false
-          exclude: |
-            .git
-            .github
-            node_modules
-            README.md
-            .gitignore
-            *.zip
-            build
 
       - name: Deployment complete
-        run: echo "✅ Deployment successful! Plugin updated on Hostinger."
+        run: echo "✅ Plugin deployed successfully!"
