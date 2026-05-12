@@ -1,91 +1,249 @@
-/* Applicator Directory Styles */
+/* ========================================
+   Applicator Directory - Cerakote-style
+   ======================================== */
 
-.applicator-wrapper {
-    max-width: 1200px;
+.appdir-container {
+    max-width: 1400px;
     margin: 0 auto;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ===== Toolbar ===== */
+.appdir-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
     padding: 20px 0;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
 }
 
-.applicator-search {
-    margin-bottom: 25px;
+.appdir-search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 280px;
+    max-width: 500px;
 }
 
-.applicator-search input {
+.appdir-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    pointer-events: none;
+}
+
+#appdirSearch {
     width: 100%;
-    padding: 14px 18px;
-    font-size: 16px;
-    border: 1px solid #ddd;
+    padding: 12px 16px 12px 44px;
+    font-size: 15px;
+    border: 1px solid #d0d7de;
     border-radius: 6px;
+    background: #fff;
     transition: border-color 0.2s, box-shadow 0.2s;
     box-sizing: border-box;
+    color: #1f2937;
 }
 
-.applicator-search input:focus {
+#appdirSearch:focus {
     outline: none;
-    border-color: #2ea3f2;
-    box-shadow: 0 0 0 3px rgba(46, 163, 242, 0.15);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
-.applicator-map {
-    width: 100%;
-    height: 450px;
-    border-radius: 8px;
-    margin-bottom: 30px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-}
-
-.applicator-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-}
-
-.applicator-card {
-    background: #fff;
-    padding: 22px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    border-left: 4px solid #2ea3f2;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.applicator-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-}
-
-.applicator-card h3 {
-    margin: 0 0 12px;
-    color: #2c3e50;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.applicator-card p {
-    margin: 8px 0;
+.appdir-results-count {
     font-size: 14px;
-    color: #555;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* ===== Two-column layout ===== */
+.appdir-layout {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 24px;
+    height: 700px;
+}
+
+/* ===== Left: List panel ===== */
+.appdir-list-panel {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.appdir-list {
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.appdir-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.appdir-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.appdir-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+/* ===== Card ===== */
+.appdir-card {
+    display: flex;
+    gap: 14px;
+    padding: 18px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.appdir-card:hover {
+    background: #f9fafb;
+}
+
+.appdir-card.is-active {
+    background: #eff6ff;
+    border-left: 3px solid #2563eb;
+    padding-left: 13px;
+}
+
+.appdir-card-number {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #1f2937;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.appdir-card.is-active .appdir-card-number {
+    background: #2563eb;
+}
+
+.appdir-card-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.appdir-card-title {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.3;
+}
+
+.appdir-card-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 4px 0;
+    font-size: 13px;
+    color: #4b5563;
     line-height: 1.5;
 }
 
-.app-label {
-    font-weight: 600;
-    color: #333;
+.appdir-card-icon {
+    flex-shrink: 0;
+    width: 18px;
+    text-align: center;
 }
 
-.applicator-empty {
+.appdir-card-row a {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+.appdir-card-row a:hover {
+    text-decoration: underline;
+}
+
+/* ===== No results ===== */
+.appdir-no-results {
+    padding: 40px 20px;
     text-align: center;
-    padding: 40px;
-    color: #888;
+    color: #6b7280;
     font-style: italic;
 }
 
-/* Mobile */
-@media (max-width: 600px) {
-    .applicator-list {
+/* ===== Right: Map panel ===== */
+.appdir-map-panel {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.appdir-map {
+    width: 100%;
+    height: 100%;
+    min-height: 700px;
+}
+
+/* ===== Custom numbered marker ===== */
+.appdir-marker-label {
+    color: #fff !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+    .appdir-layout {
         grid-template-columns: 1fr;
+        height: auto;
     }
-    .applicator-map {
-        height: 350px;
+
+    .appdir-list-panel {
+        max-height: 500px;
+    }
+
+    .appdir-map {
+        min-height: 450px;
+        height: 450px;
+    }
+}
+
+@media (max-width: 640px) {
+    .appdir-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .appdir-search-wrap {
+        max-width: 100%;
+    }
+
+    .appdir-results-count {
+        text-align: center;
+    }
+
+    .appdir-card {
+        padding: 14px 12px;
+    }
+
+    .appdir-card-title {
+        font-size: 15px;
+    }
+
+    .appdir-card-row {
+        font-size: 12px;
     }
 }

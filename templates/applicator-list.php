@@ -6,46 +6,83 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 ?>
 
-<div class="applicator-wrapper">
-
+<div class="appdir-container">
+ 
     <?php if ( $atts['show_search'] === 'yes' ) : ?>
-        <div class="applicator-search">
-            <input type="text" 
-                   id="applicatorSearch" 
-                   placeholder="Search by name, address, license number, or email...">
+        <div class="appdir-toolbar">
+            <div class="appdir-search-wrap">
+                <svg class="appdir-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text" id="appdirSearch" placeholder="Search by name, address, license, or email...">
+            </div>
+            <div class="appdir-results-count">
+                Showing <span id="appdirVisibleCount"><?php echo count( $applicators ); ?></span> of <?php echo count( $applicators ); ?> applicators
+            </div>
         </div>
     <?php endif; ?>
-
-    <?php if ( $atts['show_map'] === 'yes' && ! empty( $map_data ) ) : ?>
-        <div id="applicatorMap" class="applicator-map"></div>
-    <?php endif; ?>
-
-    <?php if ( ! empty( $applicators ) ) : ?>
-        <div class="applicator-list">
-            <?php foreach ( $applicators as $app ) : ?>
-                <div class="applicator-card"
-                     data-name="<?php echo esc_attr( strtolower( $app['title'] ) ); ?>"
-                     data-address="<?php echo esc_attr( strtolower( $app['address'] ) ); ?>"
-                     data-license="<?php echo esc_attr( strtolower( $app['license'] ) ); ?>"
-                     data-email="<?php echo esc_attr( strtolower( $app['email'] ) ); ?>">
-                    <h3><?php echo esc_html( $app['title'] ); ?></h3>
-                    <?php if ( $app['license'] ) : ?>
-                        <p><span class="app-label">📜 License:</span> <?php echo esc_html( $app['license'] ); ?></p>
-                    <?php endif; ?>
-                    <?php if ( $app['phone'] ) : ?>
-                        <p><span class="app-label">📞 Phone:</span> <?php echo esc_html( $app['phone'] ); ?></p>
-                    <?php endif; ?>
-                    <?php if ( $app['email'] ) : ?>
-                        <p><span class="app-label">✉️ Email:</span> <a href="mailto:<?php echo esc_attr( $app['email'] ); ?>"><?php echo esc_html( $app['email'] ); ?></a></p>
-                    <?php endif; ?>
-                    <?php if ( $app['address'] ) : ?>
-                        <p><span class="app-label">📍 Address:</span> <?php echo esc_html( $app['address'] ); ?></p>
-                    <?php endif; ?>
+ 
+    <div class="appdir-layout">
+ 
+        <!-- LEFT: Scrollable list -->
+        <div class="appdir-list-panel">
+            <?php if ( ! empty( $applicators ) ) : ?>
+                <div class="appdir-list" id="appdirList">
+                    <?php foreach ( $applicators as $index => $app ) : ?>
+                        <div class="appdir-card"
+                             data-index="<?php echo $index; ?>"
+                             data-name="<?php echo esc_attr( strtolower( $app['title'] ) ); ?>"
+                             data-address="<?php echo esc_attr( strtolower( $app['address'] ) ); ?>"
+                             data-license="<?php echo esc_attr( strtolower( $app['license'] ) ); ?>"
+                             data-email="<?php echo esc_attr( strtolower( $app['email'] ) ); ?>">
+                            <div class="appdir-card-number"><?php echo $index + 1; ?></div>
+                            <div class="appdir-card-body">
+                                <h3 class="appdir-card-title"><?php echo esc_html( $app['title'] ); ?></h3>
+                                <?php if ( $app['license'] ) : ?>
+                                    <div class="appdir-card-row">
+                                        <span class="appdir-card-icon">📜</span>
+                                        <span>License: <?php echo esc_html( $app['license'] ); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ( $app['address'] ) : ?>
+                                    <div class="appdir-card-row">
+                                        <span class="appdir-card-icon">📍</span>
+                                        <span><?php echo esc_html( $app['address'] ); ?></span>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ( $app['phone'] ) : ?>
+                                    <div class="appdir-card-row">
+                                        <span class="appdir-card-icon">📞</span>
+                                        <a href="tel:<?php echo esc_attr( $app['phone'] ); ?>"><?php echo esc_html( $app['phone'] ); ?></a>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if ( $app['email'] ) : ?>
+                                    <div class="appdir-card-row">
+                                        <span class="appdir-card-icon">✉️</span>
+                                        <a href="mailto:<?php echo esc_attr( $app['email'] ); ?>"><?php echo esc_html( $app['email'] ); ?></a>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-            <?php endforeach; ?>
+                <div class="appdir-no-results" id="appdirNoResults" style="display:none;">
+                    <p>No applicators match your search.</p>
+                </div>
+            <?php else : ?>
+                <div class="appdir-no-results">
+                    <p>No applicators found.</p>
+                </div>
+            <?php endif; ?>
         </div>
-    <?php else : ?>
-        <p class="applicator-empty">No applicators found.</p>
-    <?php endif; ?>
-
+ 
+        <!-- RIGHT: Map -->
+        <?php if ( $atts['show_map'] === 'yes' ) : ?>
+            <div class="appdir-map-panel">
+                <div id="appdirMap" class="appdir-map"></div>
+            </div>
+        <?php endif; ?>
+ 
+    </div>
 </div>

@@ -3,7 +3,7 @@
  * Plugin Name:       Applicator Directory
  * Plugin URI:        https://github.com/SandyMOH/gmg-applicator-directory
  * Description:       Displays a searchable list and map of applicators using ACF fields. Use shortcode [applicator_list].
- * Version:           1.0.1
+ * Version:           2.0.0
  * Author:            Sandy Mohammad
  * License:           GPL v2 or later
  * Text Domain:       applicator-directory
