@@ -10,15 +10,14 @@
         searchInput.addEventListener('keyup', function () {
             var q = this.value.toLowerCase().trim();
             var cards = document.querySelectorAll('.applicator-card');
-            var visibleCount = 0;
 
             cards.forEach(function (card) {
                 var name = card.dataset.name || '';
                 var address = card.dataset.address || '';
-                var cert = card.dataset.cert || '';
-                var match = name.includes(q) || address.includes(q) || cert.includes(q);
+                var license = card.dataset.license || '';
+                var email = card.dataset.email || '';
+                var match = name.includes(q) || address.includes(q) || license.includes(q) || email.includes(q);
                 card.style.display = match ? '' : 'none';
-                if (match) visibleCount++;
             });
         });
     }
@@ -64,8 +63,9 @@
             var content =
                 '<div style="padding:8px;max-width:260px;font-family:inherit;">' +
                 '<h4 style="margin:0 0 8px;color:#2c3e50;">' + escapeHtml(item.title) + '</h4>' +
+                (item.license ? '<p style="margin:3px 0;font-size:13px;"><strong>📜</strong> ' + escapeHtml(item.license) + '</p>' : '') +
                 (item.phone ? '<p style="margin:3px 0;font-size:13px;"><strong>📞</strong> ' + escapeHtml(item.phone) + '</p>' : '') +
-                (item.cert ? '<p style="margin:3px 0;font-size:13px;"><strong>📜</strong> ' + escapeHtml(item.cert) + '</p>' : '') +
+                (item.email ? '<p style="margin:3px 0;font-size:13px;"><strong>✉️</strong> <a href="mailto:' + escapeHtml(item.email) + '">' + escapeHtml(item.email) + '</a></p>' : '') +
                 (item.address ? '<p style="margin:3px 0;font-size:13px;"><strong>📍</strong> ' + escapeHtml(item.address) + '</p>' : '') +
                 '</div>';
 
@@ -82,7 +82,6 @@
         }
     }
 
-    // Basic XSS-safe text helper for infowindow
     function escapeHtml(str) {
         if (!str) return '';
         return String(str)
@@ -93,7 +92,6 @@
             .replace(/'/g, '&#039;');
     }
 
-    // Load map after window loads
     if (document.readyState === 'complete') {
         initApplicatorMap();
     } else {

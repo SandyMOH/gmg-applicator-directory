@@ -1,11 +1,6 @@
 <?php
 /**
  * Applicator List Template
- * 
- * Available variables:
- * $applicators - array of all applicators
- * $map_data    - array of applicators with valid coordinates
- * $atts        - shortcode attributes
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -17,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
         <div class="applicator-search">
             <input type="text" 
                    id="applicatorSearch" 
-                   placeholder="Search by name, address, or certificate number...">
+                   placeholder="Search by name, address, license number, or email...">
         </div>
     <?php endif; ?>
 
@@ -31,13 +26,17 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                 <div class="applicator-card"
                      data-name="<?php echo esc_attr( strtolower( $app['title'] ) ); ?>"
                      data-address="<?php echo esc_attr( strtolower( $app['address'] ) ); ?>"
-                     data-cert="<?php echo esc_attr( strtolower( $app['cert'] ) ); ?>">
+                     data-license="<?php echo esc_attr( strtolower( $app['license'] ) ); ?>"
+                     data-email="<?php echo esc_attr( strtolower( $app['email'] ) ); ?>">
                     <h3><?php echo esc_html( $app['title'] ); ?></h3>
+                    <?php if ( $app['license'] ) : ?>
+                        <p><span class="app-label">📜 License:</span> <?php echo esc_html( $app['license'] ); ?></p>
+                    <?php endif; ?>
                     <?php if ( $app['phone'] ) : ?>
                         <p><span class="app-label">📞 Phone:</span> <?php echo esc_html( $app['phone'] ); ?></p>
                     <?php endif; ?>
-                    <?php if ( $app['cert'] ) : ?>
-                        <p><span class="app-label">📜 Certificate:</span> <?php echo esc_html( $app['cert'] ); ?></p>
+                    <?php if ( $app['email'] ) : ?>
+                        <p><span class="app-label">✉️ Email:</span> <a href="mailto:<?php echo esc_attr( $app['email'] ); ?>"><?php echo esc_html( $app['email'] ); ?></a></p>
                     <?php endif; ?>
                     <?php if ( $app['address'] ) : ?>
                         <p><span class="app-label">📍 Address:</span> <?php echo esc_html( $app['address'] ); ?></p>
