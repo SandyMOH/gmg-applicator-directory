@@ -1,0 +1,45 @@
+name: Deploy to Hostinger via SFTP
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Plugin
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Show deployment info
+        run: |
+          echo "🚀 Deploying to Hostinger"
+          echo "📁 Target: ${{ secrets.SFTP_TARGET_PATH }}"
+          echo "🌿 Commit: ${{ github.sha }}"
+
+      - name: Deploy via SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        with:
+          server: ${{ secrets.SFTP_SERVER }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          port: ${{ secrets.SFTP_PORT }}
+          local_path: './*'
+          remote_path: ${{ secrets.SFTP_TARGET_PATH }}
+          sftp_only: true
+          delete_remote_files: false
+          exclude: |
+            .git
+            .github
+            node_modules
+            README.md
+            .gitignore
+            *.zip
+            build
+
+      - name: Deployment complete
+        run: echo "✅ Deployment successful! Plugin updated on Hostinger."
