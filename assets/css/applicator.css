@@ -2,6 +2,13 @@
    Applicator Directory - Cerakote-style
    ======================================== */
 
+/* add main color variables here */
+:root {
+    --appdir-primary: #93D500;
+    --appdir-secondary: #0F2E1E;
+    --appdir-accent: #4F694B;
+}
+
 .appdir-container {
     max-width: 1400px;
     margin: 0 auto;
@@ -50,8 +57,8 @@
 
 #appdirSearch:focus {
     outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    border-color: var(--appdir-primary);
+    box-shadow: 0 0 0 3px rgba(147, 213, 0, 0.12);
 }
 
 .appdir-results-count {
@@ -113,8 +120,8 @@
 }
 
 .appdir-card.is-active {
-    background: #eff6ff;
-    border-left: 3px solid #2563eb;
+    background: #f0fdf4;
+    border-left: 3px solid var(--appdir-primary);
     padding-left: 13px;
 }
 
@@ -123,7 +130,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #1f2937;
+    background: var(--appdir-secondary);
     color: #fff;
     display: flex;
     align-items: center;
@@ -133,7 +140,7 @@
 }
 
 .appdir-card.is-active .appdir-card-number {
-    background: #2563eb;
+    background: var(--appdir-primary);
 }
 
 .appdir-card-body {
@@ -166,7 +173,7 @@
 }
 
 .appdir-card-row a {
-    color: #2563eb;
+    color: var(--appdir-primary);
     text-decoration: none;
 }
 
