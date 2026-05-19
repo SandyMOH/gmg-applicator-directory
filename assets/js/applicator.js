@@ -1,5 +1,6 @@
 /**
  * Applicator Directory - Cerakote-style interactions
+ * v1.2.0
  */
 (function () {
     'use strict';
@@ -7,7 +8,6 @@
     var markers = [];
     var map = null;
     var infoWindow = null;
-    var totalCount = 0;
     var activeIndex = -1;
 
     // ===== Search filter =====
@@ -26,16 +26,17 @@
 
             cards.forEach(function (card) {
                 var index = parseInt(card.dataset.index, 10);
-                var name = card.dataset.name || '';
-                var address = card.dataset.address || '';
-                var license = card.dataset.license || '';
-                var email = card.dataset.email || '';
+                var fields = [
+                    card.dataset.name || '',
+                    card.dataset.region || '',
+                    card.dataset.suburb || '',
+                    card.dataset.city || '',
+                    card.dataset.state || '',
+                    card.dataset.license || '',
+                    card.dataset.email || ''
+                ];
 
-                var match = !q ||
-                    name.includes(q) ||
-                    address.includes(q) ||
-                    license.includes(q) ||
-                    email.includes(q);
+                var match = !q || fields.some(function (f) { return f.includes(q); });
 
                 card.style.display = match ? '' : 'none';
                 if (match) visible++;
@@ -53,10 +54,14 @@
             // Re-fit map to visible markers
             if (map && visible > 0) {
                 var bounds = new google.maps.LatLngBounds();
+                var hasBounds = false;
                 markers.forEach(function (m) {
-                    if (m && m.getMap()) bounds.extend(m.getPosition());
+                    if (m && m.getMap()) {
+                        bounds.extend(m.getPosition());
+                        hasBounds = true;
+                    }
                 });
-                if (!bounds.isEmpty()) map.fitBounds(bounds);
+                if (hasBounds) map.fitBounds(bounds);
             }
         });
     }
@@ -73,12 +78,12 @@
 
     // ===== Activate a card + marker pair =====
     function activateItem(index, fromCard) {
-        // Reset previous active state
+        // Reset previous
         document.querySelectorAll('.appdir-card').forEach(function (c) {
             c.classList.remove('is-active');
         });
 
-        // Highlight active card
+        // Highlight card
         var card = document.querySelector('.appdir-card[data-index="' + index + '"]');
         if (card) {
             card.classList.add('is-active');
@@ -87,7 +92,7 @@
             }
         }
 
-        // Pan map and open info window
+        // Pan map and open info
         if (map && markers[index]) {
             var marker = markers[index];
             map.panTo(marker.getPosition());
@@ -101,7 +106,7 @@
         activeIndex = index;
     }
 
-    // ===== Build numbered SVG marker icon =====
+    // ===== Build numbered SVG marker =====
     function createNumberedMarker(number, isActive) {
         var bg = isActive ? '#2563eb' : '#1f2937';
         var svg =
@@ -120,6 +125,7 @@
     // ===== Initialize Google Map =====
     function initApplicatorMap() {
         var mapEl = document.getElementById('appdirMap');
+
         if (!mapEl) {
             setupSearch();
             setupCardClicks();
@@ -127,20 +133,18 @@
         }
 
         if (typeof google === 'undefined' || !google.maps) {
-            mapEl.innerHTML = '<p style="padding:20px;text-align:center;color:#888;">Google Maps API not loaded. Configure API key in plugin settings.</p>';
+            mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280;padding:40px;text-align:center;"><div><p style="font-size:16px;margin:0 0 8px;">Map unavailable</p><p style="font-size:13px;margin:0;">Configure Google Maps API key in Settings → Applicator Directory</p></div></div>';
             setupSearch();
             setupCardClicks();
             return;
         }
 
         if (typeof applicatorData === 'undefined' || !applicatorData.length) {
-            mapEl.innerHTML = '<p style="padding:20px;text-align:center;color:#888;">No locations to display. Add Location to your applicators.</p>';
+            mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280;padding:40px;text-align:center;"><div><p style="font-size:16px;margin:0 0 8px;">No locations to display</p><p style="font-size:13px;margin:0;">Add a Location (Google Map field) to your applicator posts</p></div></div>';
             setupSearch();
             setupCardClicks();
             return;
         }
-
-        totalCount = applicatorData.length;
 
         map = new google.maps.Map(mapEl, {
             zoom: 5,
@@ -152,7 +156,8 @@
             streetViewControl: false,
             fullscreenControl: true,
             styles: [
-                { featureType: 'poi', stylers: [{ visibility: 'off' }] }
+                { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+                { featureType: 'transit', stylers: [{ visibility: 'off' }] }
             ]
         });
 
@@ -172,13 +177,20 @@
                 icon: createNumberedMarker(index + 1, false)
             });
 
+            var regionHtml = item.region
+                ? '<span style="display:inline-block;padding:1px 8px;font-size:10px;font-weight:600;text-transform:uppercase;background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;border-radius:12px;">' + escapeHtml(item.region) + '</span>'
+                : '';
+
             var content =
-                '<div style="padding:6px;max-width:260px;font-family:inherit;">' +
-                '<h4 style="margin:0 0 8px;color:#111827;font-size:15px;">' + (index + 1) + '. ' + escapeHtml(item.title) + '</h4>' +
-                (item.license ? '<p style="margin:3px 0;font-size:13px;color:#4b5563;"><strong>📜 License:</strong> ' + escapeHtml(item.license) + '</p>' : '') +
-                (item.address ? '<p style="margin:3px 0;font-size:13px;color:#4b5563;"><strong>📍</strong> ' + escapeHtml(item.address) + '</p>' : '') +
-                (item.phone ? '<p style="margin:3px 0;font-size:13px;"><strong>📞</strong> <a href="tel:' + escapeHtml(item.phone) + '" style="color:#2563eb;text-decoration:none;">' + escapeHtml(item.phone) + '</a></p>' : '') +
-                (item.email ? '<p style="margin:3px 0;font-size:13px;"><strong>✉️</strong> <a href="mailto:' + escapeHtml(item.email) + '" style="color:#2563eb;text-decoration:none;">' + escapeHtml(item.email) + '</a></p>' : '') +
+                '<div style="padding:6px;max-width:280px;font-family:inherit;">' +
+                '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+                '<strong style="font-size:15px;color:#111827;">' + (index + 1) + '. ' + escapeHtml(item.title) + '</strong>' +
+                regionHtml +
+                '</div>' +
+                (item.license ? '<p style="margin:3px 0;font-size:13px;color:#4b5563;">📜 License: ' + escapeHtml(item.license) + '</p>' : '') +
+                (item.display_address ? '<p style="margin:3px 0;font-size:13px;color:#4b5563;">📍 ' + escapeHtml(item.display_address) + '</p>' : '') +
+                (item.phone ? '<p style="margin:3px 0;font-size:13px;">📞 <a href="tel:' + escapeHtml(item.phone) + '" style="color:#2563eb;text-decoration:none;">' + escapeHtml(item.phone) + '</a></p>' : '') +
+                (item.email ? '<p style="margin:3px 0;font-size:13px;">✉️ <a href="mailto:' + escapeHtml(item.email) + '" style="color:#2563eb;text-decoration:none;">' + escapeHtml(item.email) + '</a></p>' : '') +
                 '</div>';
 
             marker.set('content', content);
