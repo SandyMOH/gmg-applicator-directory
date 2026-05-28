@@ -1,229 +1,425 @@
 /**
- * Applicator Directory - Cerakote-style interactions
- * v1.2.0
+ * Applicator Directory v2.0.0
+ * 3-tab layout: All / Certified Sprayers / Spray Hubs
+ * Uses Google Maps API
  */
 (function () {
-    'use strict';
+  'use strict';
 
-    var markers = [];
-    var map = null;
-    var infoWindow = null;
-    var activeIndex = -1;
+  if (typeof appDirData === 'undefined') return;
 
-    // ===== Search filter =====
-    function setupSearch() {
-        var input = document.getElementById('appdirSearch');
-        var counter = document.getElementById('appdirVisibleCount');
-        var noResults = document.getElementById('appdirNoResults');
-        var list = document.getElementById('appdirList');
+  var sprayers = appDirData.sprayers || [];
+  var hubs = appDirData.hubs || [];
+  var independents = appDirData.independents || [];
 
-        if (!input) return;
+  var map, infoWindow;
+  var markers = [];
+  var activeTab = 'all';
+  var activeId = null;
+  var openHubId = null;
+  var searchQuery = '';
 
-        input.addEventListener('keyup', function () {
-            var q = this.value.toLowerCase().trim();
-            var cards = document.querySelectorAll('.appdir-card');
-            var visible = 0;
+  // ===== Helpers =====
+  function esc(str) {
+    if (!str) return '';
+    var d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
 
-            cards.forEach(function (card) {
-                var index = parseInt(card.dataset.index, 10);
-                var fields = [
-                    card.dataset.name || '',
-                    card.dataset.region || '',
-                    card.dataset.suburb || '',
-                    card.dataset.city || '',
-                    card.dataset.state || '',
-                    card.dataset.license || '',
-                    card.dataset.email || ''
-                ];
+  function toLetter(i) {
+    var s = '';
+    var n = i;
+    do {
+      s = String.fromCharCode(65 + (n % 26)) + s;
+      n = Math.floor(n / 26) - 1;
+    } while (n >= 0);
+    return s;
+  }
 
-                var match = !q || fields.some(function (f) { return f.includes(q); });
+  function buildAddress(item) {
+    return [item.suburb, item.city, item.state, item.post_code].filter(Boolean).join(', ');
+  }
 
-                card.style.display = match ? '' : 'none';
-                if (match) visible++;
+  function matchesSearch(item) {
+    if (!searchQuery) return true;
+    var text = [
+      item.title, item.company, item.city, item.state,
+      item.suburb, item.region, item.cert_number, item.email
+    ].join(' ').toLowerCase();
+    return text.indexOf(searchQuery) !== -1;
+  }
 
-                // Show/hide corresponding map marker
-                if (markers[index]) {
-                    markers[index].setMap(match ? map : null);
-                }
-            });
+  function hubMatchesSearch(hub) {
+    if (!searchQuery) return true;
+    var text = [hub.title, hub.company, hub.city, hub.state, hub.suburb, hub.region].join(' ').toLowerCase();
+    return text.indexOf(searchQuery) !== -1;
+  }
 
-            if (counter) counter.textContent = visible;
-            if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
-            if (list) list.style.display = visible === 0 ? 'none' : '';
+  // ===== Map =====
+  function createMarkerIcon(label, color) {
+    var fontSize = String(label).length > 1 ? 11 : 13;
+    return {
+      url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+        '<svg width="32" height="42" viewBox="0 0 32 42" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M16 0C7.2 0 0 7.2 0 16c0 12 16 26 16 26s16-14 16-26C32 7.2 24.8 0 16 0z" fill="' + color + '"/>' +
+        '<circle cx="16" cy="16" r="11" fill="white"/>' +
+        '<text x="16" y="21" text-anchor="middle" font-family="Arial" font-size="' + fontSize + '" font-weight="bold" fill="' + color + '">' + label + '</text>' +
+        '</svg>'
+      ),
+      scaledSize: new google.maps.Size(32, 42),
+      anchor: new google.maps.Point(16, 42),
+    };
+  }
 
-            // Re-fit map to visible markers
-            if (map && visible > 0) {
-                var bounds = new google.maps.LatLngBounds();
-                var hasBounds = false;
-                markers.forEach(function (m) {
-                    if (m && m.getMap()) {
-                        bounds.extend(m.getPosition());
-                        hasBounds = true;
-                    }
-                });
-                if (hasBounds) map.fitBounds(bounds);
-            }
-        });
+  function clearMarkers() {
+    markers.forEach(function (m) { m.setMap(null); });
+    markers = [];
+  }
+
+  function addMarker(item, label, type) {
+    if (!item.lat || !item.lng) return null;
+
+    var color = type === 'hub' ? '#2563eb' : '#93d501';
+    var marker = new google.maps.Marker({
+      position: { lat: parseFloat(item.lat), lng: parseFloat(item.lng) },
+      map: map,
+      icon: createMarkerIcon(label, color),
+      title: item.title,
+    });
+
+    var addr = buildAddress(item);
+    var content = '<div style="padding:8px;max-width:260px;font-family:inherit;">' +
+      '<div style="font-size:14px;font-weight:700;color:#1f2421;margin-bottom:6px;">' + label + '. ' + esc(item.title) + '</div>' +
+      (item.company ? '<div style="font-size:12px;color:#475569;">🏢 ' + esc(item.company) + '</div>' : '') +
+      (addr ? '<div style="font-size:12px;color:#475569;">📍 ' + esc(addr) + '</div>' : '') +
+      (item.phone ? '<div style="font-size:12px;color:#475569;">📞 ' + esc(item.phone) + '</div>' : '') +
+      '</div>';
+
+    marker.addListener('click', function () {
+      infoWindow.setContent(content);
+      infoWindow.open(map, marker);
+      activeId = item.id;
+      renderList();
+    });
+
+    marker._itemId = item.id;
+    markers.push(marker);
+    return marker;
+  }
+
+  function fitMapToMarkers() {
+    if (markers.length === 0) return;
+    if (markers.length === 1) {
+      map.setCenter(markers[0].getPosition());
+      map.setZoom(11);
+      return;
+    }
+    var bounds = new google.maps.LatLngBounds();
+    markers.forEach(function (m) { bounds.extend(m.getPosition()); });
+    map.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 });
+  }
+
+  function flyToItem(id) {
+    var m = markers.find(function (mk) { return mk._itemId === id; });
+    if (m) {
+      map.panTo(m.getPosition());
+      map.setZoom(12);
+      google.maps.event.trigger(m, 'click');
+    }
+  }
+
+  // ===== Update map markers based on current tab + state =====
+  function updateMap() {
+    clearMarkers();
+    var counter = 0;
+
+    if (activeTab === 'all') {
+      // Hubs as flat cards + independent sprayers
+      hubs.filter(hubMatchesSearch).forEach(function (h) {
+        counter++;
+        addMarker(h, String(counter), 'hub');
+      });
+      independents.filter(matchesSearch).forEach(function (s) {
+        counter++;
+        addMarker(s, String(counter), 'sprayer');
+      });
     }
 
-    // ===== Card click → activate marker =====
-    function setupCardClicks() {
-        document.querySelectorAll('.appdir-card').forEach(function (card) {
-            card.addEventListener('click', function () {
-                var index = parseInt(this.dataset.index, 10);
-                activateItem(index, true);
-            });
-        });
+    if (activeTab === 'sprayers') {
+      sprayers.filter(matchesSearch).forEach(function (s) {
+        counter++;
+        addMarker(s, String(counter), 'sprayer');
+      });
     }
 
-    // ===== Activate a card + marker pair =====
-    function activateItem(index, fromCard) {
-        // Reset previous
-        document.querySelectorAll('.appdir-card').forEach(function (c) {
-            c.classList.remove('is-active');
-        });
+    if (activeTab === 'hubs') {
+      hubs.filter(hubMatchesSearch).forEach(function (h) {
+        counter++;
+        addMarker(h, String(counter), 'hub');
 
-        // Highlight card
-        var card = document.querySelector('.appdir-card[data-index="' + index + '"]');
-        if (card) {
-            card.classList.add('is-active');
-            if (!fromCard) {
-                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
+        // If this hub is expanded, add sprayer pins with A, B, C
+        if (openHubId === h.id && h.sprayers) {
+          h.sprayers.forEach(function (s, i) {
+            addMarker(s, toLetter(i), 'sprayer');
+          });
         }
-
-        // Pan map and open info
-        if (map && markers[index]) {
-            var marker = markers[index];
-            map.panTo(marker.getPosition());
-            if (map.getZoom() < 12) map.setZoom(12);
-            if (infoWindow) {
-                infoWindow.setContent(marker.get('content'));
-                infoWindow.open(map, marker);
-            }
-        }
-
-        activeIndex = index;
+      });
     }
 
-    // ===== Build numbered SVG marker =====
-    function createNumberedMarker(number, isActive) {
-        var bg = isActive ? '#2563eb' : '#1f2937';
-        var svg =
-            '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="46" viewBox="0 0 36 46">' +
-            '<path d="M18 0C8.1 0 0 8.1 0 18c0 13.5 18 28 18 28s18-14.5 18-28C36 8.1 27.9 0 18 0z" fill="' + bg + '"/>' +
-            '<text x="18" y="24" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">' + number + '</text>' +
-            '</svg>';
+    fitMapToMarkers();
+  }
 
-        return {
-            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
-            scaledSize: new google.maps.Size(36, 46),
-            anchor: new google.maps.Point(18, 46)
-        };
+  // ===== Render list =====
+  function renderList() {
+    var list = document.getElementById('appdir-list');
+    if (!list) return;
+    var html = '';
+    var counter = 0;
+
+    // --- ALL TAB: everything flat ---
+    if (activeTab === 'all') {
+      var filteredHubs = hubs.filter(hubMatchesSearch);
+      var filteredIndependents = independents.filter(matchesSearch);
+
+      filteredHubs.forEach(function (h) {
+        counter++;
+        html += renderHubFlatCard(h, counter);
+      });
+      filteredIndependents.forEach(function (s) {
+        counter++;
+        html += renderSprayerCard(s, counter);
+      });
+
+      if (counter === 0) html = '<div class="appdir-empty">Nothing matches your search.</div>';
+
+      document.getElementById('count-all').textContent = hubs.length + independents.length;
     }
 
-    // ===== Initialize Google Map =====
-    function initApplicatorMap() {
-        var mapEl = document.getElementById('appdirMap');
+    // --- SPRAYERS TAB: flat ---
+    if (activeTab === 'sprayers') {
+      var filteredSprayers = sprayers.filter(matchesSearch);
+      filteredSprayers.forEach(function (s) {
+        counter++;
+        html += renderSprayerCard(s, counter);
+      });
 
-        if (!mapEl) {
-            setupSearch();
-            setupCardClicks();
-            return;
-        }
+      if (counter === 0) html = '<div class="appdir-empty">No certified sprayers match your search.</div>';
 
-        if (typeof google === 'undefined' || !google.maps) {
-            mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280;padding:40px;text-align:center;"><div><p style="font-size:16px;margin:0 0 8px;">Map unavailable</p><p style="font-size:13px;margin:0;">Configure Google Maps API key in Settings → Applicator Directory</p></div></div>';
-            setupSearch();
-            setupCardClicks();
-            return;
-        }
-
-        if (typeof applicatorData === 'undefined' || !applicatorData.length) {
-            mapEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280;padding:40px;text-align:center;"><div><p style="font-size:16px;margin:0 0 8px;">No locations to display</p><p style="font-size:13px;margin:0;">Add a Location (Google Map field) to your applicator posts</p></div></div>';
-            setupSearch();
-            setupCardClicks();
-            return;
-        }
-
-        map = new google.maps.Map(mapEl, {
-            zoom: 5,
-            center: {
-                lat: parseFloat(applicatorData[0].lat),
-                lng: parseFloat(applicatorData[0].lng)
-            },
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: true,
-            styles: [
-                { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-                { featureType: 'transit', stylers: [{ visibility: 'off' }] }
-            ]
-        });
-
-        infoWindow = new google.maps.InfoWindow();
-        var bounds = new google.maps.LatLngBounds();
-
-        applicatorData.forEach(function (item, index) {
-            var position = {
-                lat: parseFloat(item.lat),
-                lng: parseFloat(item.lng)
-            };
-
-            var marker = new google.maps.Marker({
-                position: position,
-                map: map,
-                title: item.title,
-                icon: createNumberedMarker(index + 1, false)
-            });
-
-            var regionHtml = item.region
-                ? '<span style="display:inline-block;padding:1px 8px;font-size:10px;font-weight:600;text-transform:uppercase;background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;border-radius:12px;">' + escapeHtml(item.region) + '</span>'
-                : '';
-
-            var content =
-                '<div style="padding:6px;max-width:280px;font-family:inherit;">' +
-                '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
-                '<strong style="font-size:15px;color:#111827;">' + (index + 1) + '. ' + escapeHtml(item.title) + '</strong>' +
-                regionHtml +
-                '</div>' +
-                (item.license ? '<p style="margin:3px 0;font-size:13px;color:#4b5563;">📜 License: ' + escapeHtml(item.license) + '</p>' : '') +
-                (item.display_address ? '<p style="margin:3px 0;font-size:13px;color:#4b5563;">📍 ' + escapeHtml(item.display_address) + '</p>' : '') +
-                (item.phone ? '<p style="margin:3px 0;font-size:13px;">📞 <a href="tel:' + escapeHtml(item.phone) + '" style="color:#2563eb;text-decoration:none;">' + escapeHtml(item.phone) + '</a></p>' : '') +
-                (item.email ? '<p style="margin:3px 0;font-size:13px;">✉️ <a href="mailto:' + escapeHtml(item.email) + '" style="color:#2563eb;text-decoration:none;">' + escapeHtml(item.email) + '</a></p>' : '') +
-                '</div>';
-
-            marker.set('content', content);
-
-            marker.addListener('click', function () {
-                activateItem(index, false);
-            });
-
-            markers[index] = marker;
-            bounds.extend(position);
-        });
-
-        if (applicatorData.length > 1) {
-            map.fitBounds(bounds);
-        }
-
-        setupSearch();
-        setupCardClicks();
+      document.getElementById('count-sprayers').textContent = sprayers.length;
     }
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+    // --- HUBS TAB: accordion ---
+    if (activeTab === 'hubs') {
+      var filteredHubs2 = hubs.filter(hubMatchesSearch);
+      filteredHubs2.forEach(function (h) {
+        counter++;
+        html += renderHubAccordion(h, counter);
+      });
+
+      if (counter === 0) html = '<div class="appdir-empty">No spray hubs match your search.</div>';
+
+      document.getElementById('count-hubs').textContent = hubs.length;
     }
 
-    if (document.readyState === 'complete') {
-        initApplicatorMap();
+    list.innerHTML = html;
+
+    // Update counts on first render
+    document.getElementById('count-all').textContent = hubs.length + independents.length;
+    document.getElementById('count-sprayers').textContent = sprayers.length;
+    document.getElementById('count-hubs').textContent = hubs.length;
+
+    // Update results text
+    var resultsEl = document.getElementById('appdir-results-count');
+    if (activeTab === 'all') resultsEl.textContent = (hubs.length + independents.length) + ' listings';
+    if (activeTab === 'sprayers') resultsEl.textContent = sprayers.length + ' certified sprayers';
+    if (activeTab === 'hubs') resultsEl.textContent = hubs.length + ' spray hubs';
+
+    // Bind click events
+    bindCardClicks();
+    bindHubAccordionClicks();
+    bindHubSprayerClicks();
+  }
+
+  // ===== Card renderers =====
+  function renderSprayerCard(s, num) {
+    var addr = buildAddress(s);
+    var isActive = activeId === s.id ? ' active' : '';
+    return '<div class="appdir-card' + isActive + '" data-id="' + s.id + '">' +
+      '<div class="appdir-card-number sprayer">' + num + '</div>' +
+      '<div class="appdir-card-body">' +
+        '<div class="appdir-card-header">' +
+          '<span class="appdir-card-title">' + esc(s.title) + '</span>' +
+          '<span class="appdir-badge sprayer">Certified</span>' +
+        '</div>' +
+        (s.company ? '<div class="appdir-card-row"><span class="ico">🏢</span><span>' + esc(s.company) + '</span></div>' : '') +
+        (addr ? '<div class="appdir-card-row"><span class="ico">📍</span><span>' + esc(addr) + '</span></div>' : '') +
+        (s.phone ? '<div class="appdir-card-row"><span class="ico">📞</span><a href="tel:' + esc(s.phone) + '">' + esc(s.phone) + '</a></div>' : '') +
+        (s.cert_number ? '<span class="appdir-card-cert">📜 ' + esc(s.cert_number) + '</span>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderHubFlatCard(h, num) {
+    var addr = buildAddress(h);
+    var isActive = activeId === h.id ? ' active' : '';
+    var badgeClass = h.is_gmg ? 'gmg' : 'hub';
+    var badgeText = h.is_gmg ? 'GMG Hub' : 'Spray Hub';
+    return '<div class="appdir-card' + isActive + '" data-id="' + h.id + '">' +
+      '<div class="appdir-card-number hub">' + num + '</div>' +
+      '<div class="appdir-card-body">' +
+        '<div class="appdir-card-header">' +
+          '<span class="appdir-card-title">' + esc(h.company || h.title) + '</span>' +
+          '<span class="appdir-badge ' + badgeClass + '">' + badgeText + '</span>' +
+        '</div>' +
+        (addr ? '<div class="appdir-card-row"><span class="ico">📍</span><span>' + esc(addr) + '</span></div>' : '') +
+        (h.phone ? '<div class="appdir-card-row"><span class="ico">📞</span><a href="tel:' + esc(h.phone) + '">' + esc(h.phone) + '</a></div>' : '') +
+        (h.email ? '<div class="appdir-card-row"><span class="ico">✉️</span><a href="mailto:' + esc(h.email) + '">' + esc(h.email) + '</a></div>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderHubAccordion(h, num) {
+    var addr = buildAddress(h);
+    var isActive = activeId === h.id ? ' active' : '';
+    var isOpen = openHubId === h.id;
+    var badgeClass = h.is_gmg ? 'gmg' : 'hub';
+    var badgeText = h.is_gmg ? 'GMG Hub' : 'Spray Hub';
+    var sprayerCount = h.sprayers ? h.sprayers.length : 0;
+    var arrowClass = 'appdir-expand-arrow' + (isOpen ? ' open' : '');
+
+    var html = '<div class="appdir-hub-group" data-hub-id="' + h.id + '">' +
+      '<div class="appdir-hub-header' + isActive + '" data-hub-id="' + h.id + '">';
+
+    if (sprayerCount > 0) {
+      html += '<span class="' + arrowClass + '">▶</span>';
     } else {
-        window.addEventListener('load', initApplicatorMap);
+      html += '<span class="appdir-expand-arrow" style="visibility:hidden">▶</span>';
     }
+
+    html += '<div class="appdir-card-number hub">' + num + '</div>' +
+      '<div class="appdir-card-body">' +
+        '<div class="appdir-card-header">' +
+          '<span class="appdir-card-title">' + esc(h.company || h.title) + '</span>' +
+          '<span class="appdir-badge ' + badgeClass + '">' + badgeText + '</span>' +
+          (sprayerCount > 0 ? '<span class="appdir-badge count">' + sprayerCount + ' sprayer' + (sprayerCount !== 1 ? 's' : '') + '</span>' : '') +
+        '</div>' +
+        (addr ? '<div class="appdir-card-row"><span class="ico">📍</span><span>' + esc(addr) + '</span></div>' : '') +
+        (h.phone ? '<div class="appdir-card-row"><span class="ico">📞</span><a href="tel:' + esc(h.phone) + '">' + esc(h.phone) + '</a></div>' : '') +
+        (h.email ? '<div class="appdir-card-row"><span class="ico">✉️</span><a href="mailto:' + esc(h.email) + '">' + esc(h.email) + '</a></div>' : '') +
+      '</div>' +
+    '</div>';
+
+    // Sprayer rows
+    if (sprayerCount > 0) {
+      html += '<div class="appdir-hub-sprayers' + (isOpen ? ' open' : '') + '">';
+      h.sprayers.forEach(function (s, i) {
+        var letter = toLetter(i);
+        var sActive = activeId === s.id ? ' active' : '';
+        html += '<div class="appdir-hub-sprayer' + sActive + '" data-id="' + s.id + '">' +
+          '<span class="appdir-hub-sprayer-letter">' + letter + '</span>' +
+          '<span class="appdir-hub-sprayer-name">' + esc(s.title) + '</span>' +
+          '<span class="appdir-hub-sprayer-cert">' + esc(s.cert_number) + '</span>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  // ===== Click handlers =====
+  function bindCardClicks() {
+    document.querySelectorAll('.appdir-card').forEach(function (card) {
+      card.addEventListener('click', function () {
+        activeId = parseInt(this.dataset.id);
+        renderList();
+        flyToItem(activeId);
+      });
+    });
+  }
+
+  function bindHubAccordionClicks() {
+    document.querySelectorAll('.appdir-hub-header').forEach(function (header) {
+      header.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var hubId = parseInt(this.dataset.hubId);
+
+        // Accordion: clicking a hub opens it, closes others. Clicking same hub keeps it open.
+        if (openHubId !== hubId) {
+          openHubId = hubId;
+        }
+
+        activeId = hubId;
+        renderList();
+        updateMap();
+        flyToItem(hubId);
+      });
+    });
+  }
+
+  function bindHubSprayerClicks() {
+    document.querySelectorAll('.appdir-hub-sprayer').forEach(function (row) {
+      row.addEventListener('click', function (e) {
+        e.stopPropagation();
+        activeId = parseInt(this.dataset.id);
+        renderList();
+        flyToItem(activeId);
+      });
+    });
+  }
+
+  // ===== Init =====
+  function init() {
+    var mapEl = document.getElementById('appdir-map');
+    if (!mapEl || typeof google === 'undefined' || !google.maps) {
+      console.warn('Applicator Directory: Google Maps API not loaded.');
+      return;
+    }
+
+    map = new google.maps.Map(mapEl, {
+      zoom: 4,
+      center: { lat: -25.0, lng: 134.0 },
+      mapTypeControl: true,
+      streetViewControl: false,
+      fullscreenControl: true,
+    });
+
+    infoWindow = new google.maps.InfoWindow();
+
+    // Tab clicks
+    document.querySelectorAll('.appdir-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.appdir-tab').forEach(function (t) { t.classList.remove('active'); });
+        this.classList.add('active');
+        activeTab = this.dataset.tab;
+        activeId = null;
+        openHubId = null;
+        renderList();
+        updateMap();
+      });
+    });
+
+    // Search
+    var searchInput = document.getElementById('appdir-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        searchQuery = this.value.toLowerCase().trim();
+        renderList();
+        updateMap();
+      });
+    }
+
+    // Initial render
+    renderList();
+    updateMap();
+  }
+
+  // Start
+  if (document.readyState === 'complete') {
+    init();
+  } else {
+    window.addEventListener('load', init);
+  }
 })();
