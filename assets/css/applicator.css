@@ -72,15 +72,16 @@
 
 .appdir-search-icon {
   position: absolute;
-  left: 14px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: #94a3b8;
+  pointer-events: none;
 }
 
 .appdir-search {
   width: 100%;
-  padding: 11px 16px 11px 42px;
+  padding: 12px 16px 12px 46px;
   font-size: 15px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
