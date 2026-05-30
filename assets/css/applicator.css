@@ -29,7 +29,9 @@
   transition: color 0.15s, border-color 0.15s;
 }
 
-.appdir-tab:hover { color: #1f2421; }
+.appdir-tab:hover {
+  color: #1f2421;
+}
 
 .appdir-tab.active {
   color: #7ab801;
@@ -137,8 +139,13 @@
   transition: background 0.15s;
 }
 
-.appdir-card:last-child { border-bottom: none; }
-.appdir-card:hover { background: #f8fafc; }
+.appdir-card:last-child {
+  border-bottom: none;
+}
+
+.appdir-card:hover {
+  background: #f8fafc;
+}
 
 .appdir-card.active {
   background: #f6faec;
@@ -160,10 +167,19 @@
   margin-top: 2px;
 }
 
-.appdir-card-number.hub { background: #2563eb; }
-.appdir-card-number.sprayer { background: #93d501; color: #1f2421; }
+.appdir-card-number.hub {
+  background: #2563eb;
+}
 
-.appdir-card-body { flex: 1; min-width: 0; }
+.appdir-card-number.sprayer {
+  background: #93d501;
+  color: #1f2421;
+}
+
+.appdir-card-body {
+  flex: 1;
+  min-width: 0;
+}
 
 .appdir-card-header {
   display: flex;
@@ -190,10 +206,29 @@
   white-space: nowrap;
 }
 
-.appdir-badge.hub { background: #dbeafe; color: #2563eb; border: 1px solid #bfdbfe; }
-.appdir-badge.sprayer { background: #e8f5cc; color: #7ab801; border: 1px solid #d4e8a8; }
-.appdir-badge.gmg { background: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
-.appdir-badge.count { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+.appdir-badge.hub {
+  background: #dbeafe;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.appdir-badge.sprayer {
+  background: #e8f5cc;
+  color: #7ab801;
+  border: 1px solid #d4e8a8;
+}
+
+.appdir-badge.gmg {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.appdir-badge.count {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
 
 .appdir-card-row {
   display: flex;
@@ -205,9 +240,20 @@
   line-height: 1.5;
 }
 
-.appdir-card-row .ico { flex-shrink: 0; width: 16px; text-align: center; }
-.appdir-card-row a { color: #2563eb; text-decoration: none; }
-.appdir-card-row a:hover { text-decoration: underline; }
+.appdir-card-row .ico {
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
+.appdir-card-row a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.appdir-card-row a:hover {
+  text-decoration: underline;
+}
 
 .appdir-card-cert {
   display: inline-block;
@@ -226,7 +272,9 @@
   border-bottom: 1px solid #f1f5f9;
 }
 
-.appdir-hub-group:last-child { border-bottom: none; }
+.appdir-hub-group:last-child {
+  border-bottom: none;
+}
 
 .appdir-hub-header {
   display: flex;
@@ -236,7 +284,9 @@
   transition: background 0.15s;
 }
 
-.appdir-hub-header:hover { background: #f8fafc; }
+.appdir-hub-header:hover {
+  background: #f8fafc;
+}
 
 .appdir-hub-header.active {
   background: #f6faec;
@@ -283,7 +333,9 @@
   transition: background 0.15s;
 }
 
-.appdir-hub-sprayer:hover { background: #f1f5f9; }
+.appdir-hub-sprayer:hover {
+  background: #f1f5f9;
+}
 
 .appdir-hub-sprayer.active {
   background: #f6faec;
@@ -326,13 +378,96 @@
 
 /* ===== Responsive ===== */
 @media (max-width: 1024px) {
-  .appdir-layout { grid-template-columns: 1fr; height: auto; }
-  .appdir-list-panel { max-height: 480px; }
-  .appdir-map-panel { height: 420px; }
+  .appdir-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .appdir-list-panel {
+    max-height: 480px;
+  }
+
+  .appdir-map-panel {
+    height: 420px;
+  }
 }
 
 @media (max-width: 560px) {
-  .appdir-toolbar { flex-direction: column; align-items: stretch; }
-  .appdir-search-wrap { max-width: 100%; }
-  .appdir-tab { padding: 10px 14px; font-size: 14px; }
+  .appdir-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .appdir-search-wrap {
+    max-width: 100%;
+  }
+
+  .appdir-tab {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+}
+
+/* ===== Google Maps Info Window ===== */
+.gm-style-iw-c {
+  padding: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.gm-style-iw-d {
+  overflow: auto !important;
+  padding: 0 !important;
+}
+
+/* Close button */
+.gm-style-iw-c button.gm-ui-hover-effect {
+  width: 28px !important;
+  height: 28px !important;
+  top: 6px !important;
+  right: 6px !important;
+  opacity: 0.6;
+}
+
+.gm-style-iw-c button.gm-ui-hover-effect:hover {
+  opacity: 1;
+}
+
+.gm-style-iw-c button.gm-ui-hover-effect img {
+  width: 14px !important;
+  height: 14px !important;
+  margin: 7px !important;
+}
+
+/* Popup content */
+.appdir-popup {
+  padding: 14px 16px;
+  min-width: 200px;
+  max-width: 280px;
+}
+
+.appdir-popup-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2421;
+  margin-bottom: 8px;
+  padding-right: 20px;
+  line-height: 1.3;
+}
+
+.appdir-popup-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  color: #475569;
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.appdir-popup-row .p-ico {
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+  font-size: 12px;
 }

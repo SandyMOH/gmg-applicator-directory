@@ -89,11 +89,11 @@
     });
 
     var addr = buildAddress(item);
-    var content = '<div style="padding:8px;max-width:260px;font-family:inherit;">' +
-      '<div style="font-size:14px;font-weight:700;color:#1f2421;margin-bottom:6px;">' + label + '. ' + esc(item.title) + '</div>' +
-      (item.company ? '<div style="font-size:12px;color:#475569;">🏢 ' + esc(item.company) + '</div>' : '') +
-      (addr ? '<div style="font-size:12px;color:#475569;">📍 ' + esc(addr) + '</div>' : '') +
-      (item.phone ? '<div style="font-size:12px;color:#475569;">📞 ' + esc(item.phone) + '</div>' : '') +
+    var content = '<div class="appdir-popup">' +
+      '<div class="appdir-popup-title">' + esc(item.title) + '</div>' +
+      (addr ? '<div class="appdir-popup-row"><span class="p-ico">📍</span><span>' + esc(addr) + '</span></div>' : '') +
+      (item.phone ? '<div class="appdir-popup-row"><span class="p-ico">📞</span><span>' + esc(item.phone) + '</span></div>' : '') +
+      (item.email ? '<div class="appdir-popup-row"><span class="p-ico">✉️</span><span>' + esc(item.email) + '</span></div>' : '') +
       '</div>';
 
     marker.addListener('click', function () {
@@ -248,16 +248,16 @@
     return '<div class="appdir-card' + isActive + '" data-id="' + s.id + '">' +
       '<div class="appdir-card-number sprayer">' + num + '</div>' +
       '<div class="appdir-card-body">' +
-        '<div class="appdir-card-header">' +
-          '<span class="appdir-card-title">' + esc(s.title) + '</span>' +
-          '<span class="appdir-badge sprayer">Certified</span>' +
-        '</div>' +
-        (s.company ? '<div class="appdir-card-row"><span class="ico">🏢</span><span>' + esc(s.company) + '</span></div>' : '') +
-        (addr ? '<div class="appdir-card-row"><span class="ico">📍</span><span>' + esc(addr) + '</span></div>' : '') +
-        (s.phone ? '<div class="appdir-card-row"><span class="ico">📞</span><a href="tel:' + esc(s.phone) + '">' + esc(s.phone) + '</a></div>' : '') +
-        (s.cert_number ? '<span class="appdir-card-cert">📜 ' + esc(s.cert_number) + '</span>' : '') +
+      '<div class="appdir-card-header">' +
+      '<span class="appdir-card-title">' + esc(s.title) + '</span>' +
+      '<span class="appdir-badge sprayer">Certified</span>' +
       '</div>' +
-    '</div>';
+      (s.company ? '<div class="appdir-card-row"><span class="ico">🏢</span><span>' + esc(s.company) + '</span></div>' : '') +
+      (addr ? '<div class="appdir-card-row"><span class="ico">📍</span><span>' + esc(addr) + '</span></div>' : '') +
+      (s.phone ? '<div class="appdir-card-row"><span class="ico">📞</span><a href="tel:' + esc(s.phone) + '">' + esc(s.phone) + '</a></div>' : '') +
+      (s.cert_number ? '<span class="appdir-card-cert">📜 ' + esc(s.cert_number) + '</span>' : '') +
+      '</div>' +
+      '</div>';
   }
 
   function renderHubFlatCard(h, num) {
@@ -268,15 +268,15 @@
     return '<div class="appdir-card' + isActive + '" data-id="' + h.id + '">' +
       '<div class="appdir-card-number hub">' + num + '</div>' +
       '<div class="appdir-card-body">' +
-        '<div class="appdir-card-header">' +
-          '<span class="appdir-card-title">' + esc(h.company || h.title) + '</span>' +
-          '<span class="appdir-badge ' + badgeClass + '">' + badgeText + '</span>' +
-        '</div>' +
-        (addr ? '<div class="appdir-card-row"><span class="ico">📍</span><span>' + esc(addr) + '</span></div>' : '') +
-        (h.phone ? '<div class="appdir-card-row"><span class="ico">📞</span><a href="tel:' + esc(h.phone) + '">' + esc(h.phone) + '</a></div>' : '') +
-        (h.email ? '<div class="appdir-card-row"><span class="ico">✉️</span><a href="mailto:' + esc(h.email) + '">' + esc(h.email) + '</a></div>' : '') +
+      '<div class="appdir-card-header">' +
+      '<span class="appdir-card-title">' + esc(h.company || h.title) + '</span>' +
+      '<span class="appdir-badge ' + badgeClass + '">' + badgeText + '</span>' +
       '</div>' +
-    '</div>';
+      (addr ? '<div class="appdir-card-row"><span class="ico">📍</span><span>' + esc(addr) + '</span></div>' : '') +
+      (h.phone ? '<div class="appdir-card-row"><span class="ico">📞</span><a href="tel:' + esc(h.phone) + '">' + esc(h.phone) + '</a></div>' : '') +
+      (h.email ? '<div class="appdir-card-row"><span class="ico">✉️</span><a href="mailto:' + esc(h.email) + '">' + esc(h.email) + '</a></div>' : '') +
+      '</div>' +
+      '</div>';
   }
 
   function renderHubAccordion(h, num) {
@@ -299,16 +299,16 @@
 
     html += '<div class="appdir-card-number hub">' + num + '</div>' +
       '<div class="appdir-card-body">' +
-        '<div class="appdir-card-header">' +
-          '<span class="appdir-card-title">' + esc(h.company || h.title) + '</span>' +
-          '<span class="appdir-badge ' + badgeClass + '">' + badgeText + '</span>' +
-          (sprayerCount > 0 ? '<span class="appdir-badge count">' + sprayerCount + ' sprayer' + (sprayerCount !== 1 ? 's' : '') + '</span>' : '') +
-        '</div>' +
-        (addr ? '<div class="appdir-card-row"><span class="ico">📍</span><span>' + esc(addr) + '</span></div>' : '') +
-        (h.phone ? '<div class="appdir-card-row"><span class="ico">📞</span><a href="tel:' + esc(h.phone) + '">' + esc(h.phone) + '</a></div>' : '') +
-        (h.email ? '<div class="appdir-card-row"><span class="ico">✉️</span><a href="mailto:' + esc(h.email) + '">' + esc(h.email) + '</a></div>' : '') +
+      '<div class="appdir-card-header">' +
+      '<span class="appdir-card-title">' + esc(h.company || h.title) + '</span>' +
+      '<span class="appdir-badge ' + badgeClass + '">' + badgeText + '</span>' +
+      (sprayerCount > 0 ? '<span class="appdir-badge count">' + sprayerCount + ' sprayer' + (sprayerCount !== 1 ? 's' : '') + '</span>' : '') +
       '</div>' +
-    '</div>';
+      (addr ? '<div class="appdir-card-row"><span class="ico">📍</span><span>' + esc(addr) + '</span></div>' : '') +
+      (h.phone ? '<div class="appdir-card-row"><span class="ico">📞</span><a href="tel:' + esc(h.phone) + '">' + esc(h.phone) + '</a></div>' : '') +
+      (h.email ? '<div class="appdir-card-row"><span class="ico">✉️</span><a href="mailto:' + esc(h.email) + '">' + esc(h.email) + '</a></div>' : '') +
+      '</div>' +
+      '</div>';
 
     // Sprayer rows
     if (sprayerCount > 0) {
@@ -320,7 +320,7 @@
           '<span class="appdir-hub-sprayer-letter">' + letter + '</span>' +
           '<span class="appdir-hub-sprayer-name">' + esc(s.title) + '</span>' +
           '<span class="appdir-hub-sprayer-cert">' + esc(s.cert_number) + '</span>' +
-        '</div>';
+          '</div>';
       });
       html += '</div>';
     }
