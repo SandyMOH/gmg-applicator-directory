@@ -79,14 +79,23 @@
   pointer-events: none;
 }
 
-.appdir-search {
+#appdir-wrapper .appdir-search,
+#appdir-wrapper input[type=text].appdir-search {
   width: 100%;
-  padding: 12px 16px 12px 46px;
+  padding: 12px 16px 12px 46px !important;
+  font-family: inherit;
   font-size: 15px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
   background: #fff;
   box-sizing: border-box;
+  margin-bottom: 0;
+}
+
+#appdir-wrapper input[type=text].appdir-search:focus {
+  outline: none;
+  border-color: #93d501;
+  box-shadow: 0 0 0 3px rgba(147, 213, 1, 0.15);
 }
 
 .appdir-search:focus {
