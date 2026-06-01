@@ -135,15 +135,21 @@
     var counter = 0;
 
     if (activeTab === 'all') {
-      // Hubs as flat cards + independent sprayers
-      hubs.filter(hubMatchesSearch).forEach(function (h) {
+      var filteredHubs = hubs.filter(hubMatchesSearch);
+      var filteredSprayers = sprayers.filter(matchesSearch);
+
+      filteredHubs.forEach(function (h) {
         counter++;
-        addMarker(h, String(counter), 'hub');
+        html += renderHubFlatCard(h, counter);
       });
-      independents.filter(matchesSearch).forEach(function (s) {
+      filteredSprayers.forEach(function (s) {
         counter++;
-        addMarker(s, String(counter), 'sprayer');
+        html += renderSprayerCard(s, counter);
       });
+
+      if (counter === 0) html = '<div class="appdir-empty">Nothing matches your search.</div>';
+
+      document.getElementById('count-all').textContent = hubs.length + sprayers.length;
     }
 
     if (activeTab === 'sprayers') {
@@ -180,24 +186,20 @@
     // --- ALL TAB: everything flat ---
     if (activeTab === 'all') {
       var filteredHubs = hubs.filter(hubMatchesSearch);
-      var filteredSprayers = sprayers.filter(matchesSearch);
+      var filteredIndependents = independents.filter(matchesSearch);
 
-      if (filteredHubs.length === 0 && filteredSprayers.length === 0) {
-        html = '<div class="appdir-empty">Nothing matches your search.</div>';
-      } else {
-        filteredHubs.forEach(function (h) {
-          counter++;
-          html += renderHubFlatCard(h, counter);
-        });
-        filteredSprayers.forEach(function (s) {
-          counter++;
-          html += renderSprayerCard(s, counter);
-        });
-      }
+      filteredHubs.forEach(function (h) {
+        counter++;
+        html += renderHubFlatCard(h, counter);
+      });
+      filteredIndependents.forEach(function (s) {
+        counter++;
+        html += renderSprayerCard(s, counter);
+      });
 
       if (counter === 0) html = '<div class="appdir-empty">Nothing matches your search.</div>';
 
-      document.getElementById('count-all').textContent = hubs.length + independents.length;
+      document.getElementById('count-all').textContent = hubs.length + sprayers.length;
     }
 
     // --- SPRAYERS TAB: flat ---
@@ -229,7 +231,7 @@
     list.innerHTML = html;
 
     // Update counts on first render
-    document.getElementById('count-all').textContent = hubs.length + independents.length;
+    document.getElementById('count-all').textContent = hubs.length + sprayers.length;
     document.getElementById('count-sprayers').textContent = sprayers.length;
     document.getElementById('count-hubs').textContent = hubs.length;
 
