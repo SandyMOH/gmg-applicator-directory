@@ -269,7 +269,7 @@
       '<div class="appdir-card-number hub">' + num + '</div>' +
       '<div class="appdir-card-body">' +
       '<div class="appdir-card-header">' +
-      '<span class="appdir-card-title">' + esc(h.company || h.title) + '</span>' +
+      '<span class="appdir-card-title">' + esc(h.title) + '</span>' +
       '<span class="appdir-badge ' + badgeClass + '">' + badgeText + '</span>' +
       '</div>' +
       (addr ? '<div class="appdir-card-row"><span class="ico">📍</span><span>' + esc(addr) + '</span></div>' : '') +
