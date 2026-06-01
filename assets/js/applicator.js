@@ -180,16 +180,20 @@
     // --- ALL TAB: everything flat ---
     if (activeTab === 'all') {
       var filteredHubs = hubs.filter(hubMatchesSearch);
-      var filteredIndependents = independents.filter(matchesSearch);
+      var filteredSprayers = sprayers.filter(matchesSearch);
 
-      filteredHubs.forEach(function (h) {
-        counter++;
-        html += renderHubFlatCard(h, counter);
-      });
-      filteredIndependents.forEach(function (s) {
-        counter++;
-        html += renderSprayerCard(s, counter);
-      });
+      if (filteredHubs.length === 0 && filteredSprayers.length === 0) {
+        html = '<div class="appdir-empty">Nothing matches your search.</div>';
+      } else {
+        filteredHubs.forEach(function (h) {
+          counter++;
+          html += renderHubFlatCard(h, counter);
+        });
+        filteredSprayers.forEach(function (s) {
+          counter++;
+          html += renderSprayerCard(s, counter);
+        });
+      }
 
       if (counter === 0) html = '<div class="appdir-empty">Nothing matches your search.</div>';
 
@@ -300,7 +304,7 @@
     html += '<div class="appdir-card-number hub">' + num + '</div>' +
       '<div class="appdir-card-body">' +
       '<div class="appdir-card-header">' +
-      '<span class="appdir-card-title">' + esc(h.company || h.title) + '</span>' +
+      '<span class="appdir-card-title">' + esc(h.title) + '</span>' +
       '<span class="appdir-badge ' + badgeClass + '">' + badgeText + '</span>' +
       (sprayerCount > 0 ? '<span class="appdir-badge count">' + sprayerCount + ' sprayer' + (sprayerCount !== 1 ? 's' : '') + '</span>' : '') +
       '</div>' +
