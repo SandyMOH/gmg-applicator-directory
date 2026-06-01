@@ -135,21 +135,14 @@
     var counter = 0;
 
     if (activeTab === 'all') {
-      var filteredHubs = hubs.filter(hubMatchesSearch);
-      var filteredSprayers = sprayers.filter(matchesSearch);
-
-      filteredHubs.forEach(function (h) {
+      hubs.filter(hubMatchesSearch).forEach(function (h) {
         counter++;
-        html += renderHubFlatCard(h, counter);
+        addMarker(h, String(counter), 'hub');
       });
-      filteredSprayers.forEach(function (s) {
+      sprayers.filter(matchesSearch).forEach(function (s) {
         counter++;
-        html += renderSprayerCard(s, counter);
+        addMarker(s, String(counter), 'sprayer');
       });
-
-      if (counter === 0) html = '<div class="appdir-empty">Nothing matches your search.</div>';
-
-      document.getElementById('count-all').textContent = hubs.length + sprayers.length;
     }
 
     if (activeTab === 'sprayers') {
@@ -186,13 +179,13 @@
     // --- ALL TAB: everything flat ---
     if (activeTab === 'all') {
       var filteredHubs = hubs.filter(hubMatchesSearch);
-      var filteredIndependents = independents.filter(matchesSearch);
+      var filteredSprayers = sprayers.filter(matchesSearch);
 
       filteredHubs.forEach(function (h) {
         counter++;
         html += renderHubFlatCard(h, counter);
       });
-      filteredIndependents.forEach(function (s) {
+      filteredSprayers.forEach(function (s) {
         counter++;
         html += renderSprayerCard(s, counter);
       });
@@ -237,7 +230,7 @@
 
     // Update results text
     var resultsEl = document.getElementById('appdir-results-count');
-    if (activeTab === 'all') resultsEl.textContent = (hubs.length + independents.length) + ' listings';
+    if (activeTab === 'all') resultsEl.textContent = (hubs.length + sprayers.length) + ' listings';
     if (activeTab === 'sprayers') resultsEl.textContent = sprayers.length + ' certified sprayers';
     if (activeTab === 'hubs') resultsEl.textContent = hubs.length + ' spray hubs';
 
@@ -255,7 +248,7 @@
       '<div class="appdir-card-number sprayer">' + num + '</div>' +
       '<div class="appdir-card-body">' +
       '<div class="appdir-card-header">' +
-      '<span class="appdir-card-title">' + esc(s.title) + '111</span>' +
+      '<span class="appdir-card-title">' + esc(s.title) + '</span>' +
       '<span class="appdir-badge sprayer">Certified</span>' +
       '</div>' +
       (s.company ? '<div class="appdir-card-row"><span class="ico">🏢</span><span>' + esc(s.company) + '</span></div>' : '') +
@@ -275,7 +268,7 @@
       '<div class="appdir-card-number hub">' + num + '</div>' +
       '<div class="appdir-card-body">' +
       '<div class="appdir-card-header">' +
-      '<span class="appdir-card-title">' + esc(h.title) + '222</span>' +
+      '<span class="appdir-card-title">' + esc(h.title) + '</span>' +
       '<span class="appdir-badge ' + badgeClass + '">' + badgeText + '</span>' +
       '</div>' +
       (addr ? '<div class="appdir-card-row"><span class="ico">📍</span><span>' + esc(addr) + '</span></div>' : '') +
@@ -306,7 +299,7 @@
     html += '<div class="appdir-card-number hub">' + num + '</div>' +
       '<div class="appdir-card-body">' +
       '<div class="appdir-card-header">' +
-      '<span class="appdir-card-title">' + esc(h.title) + '333</span>' +
+      '<span class="appdir-card-title">' + esc(h.title) + '</span>' +
       '<span class="appdir-badge ' + badgeClass + '">' + badgeText + '</span>' +
       (sprayerCount > 0 ? '<span class="appdir-badge count">' + sprayerCount + ' sprayer' + (sprayerCount !== 1 ? 's' : '') + '</span>' : '') +
       '</div>' +
@@ -324,7 +317,7 @@
         var sActive = activeId === s.id ? ' active' : '';
         html += '<div class="appdir-hub-sprayer' + sActive + '" data-id="' + s.id + '">' +
           '<span class="appdir-hub-sprayer-letter">' + letter + '</span>' +
-          '<span class="appdir-hub-sprayer-name">' + esc(s.title) + '444</span>' +
+          '<span class="appdir-hub-sprayer-name">' + esc(s.title) + '</span>' +
           '<span class="appdir-hub-sprayer-cert">' + esc(s.cert_number) + '</span>' +
           '</div>';
       });
