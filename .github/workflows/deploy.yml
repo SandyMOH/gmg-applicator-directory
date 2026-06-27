@@ -30,7 +30,7 @@ jobs:
           username: ${{ secrets.SFTP_USERNAME }}
           password: ${{ secrets.SFTP_PASSWORD }}
           # This action maps paths directly inside the SFTP root directory
-          server-dir: /public_html/wp-content/plugins/applicator-director/
+          server-dir: /public_html/wp-content/plugins/applicator-directory/
 
       - name: Deployment complete
         run: echo "✅ Plugin deployed successfully!"
