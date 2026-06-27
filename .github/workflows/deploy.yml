@@ -23,17 +23,14 @@ jobs:
           rm -rf .git .github README.md .gitignore
           ls -la
 
-      - name: Deploy via SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SFTP_SERVER }}
           username: ${{ secrets.SFTP_USERNAME }}
           password: ${{ secrets.SFTP_PASSWORD }}
-          port: ${{ secrets.SFTP_PORT }}
-          local_path: './*'
-          remote_path: ${{ secrets.SFTP_TARGET_PATH }}
-          sftp_only: true
-          delete_remote_files: false
+          # This action maps paths directly inside the SFTP root directory
+          server-dir: /public_html/wp-content/plugins/applicator-director/
 
       - name: Deployment complete
         run: echo "✅ Plugin deployed successfully!"
