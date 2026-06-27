@@ -1,7 +1,8 @@
 /**
- * Applicator Directory v2.0.0
+ * Applicator Directory v2.1.0
  * 3-tab layout: All / Certified Sprayers / Spray Hubs
  * Uses Google Maps API
+ * Compatible with Elementor, Divi, and Gutenberg
  */
 (function () {
   'use strict';
@@ -370,12 +371,18 @@
   }
 
   // ===== Init =====
+  var initialized = false;
+
   function init() {
     var mapEl = document.getElementById('appdir-map');
     if (!mapEl || typeof google === 'undefined' || !google.maps) {
       console.warn('Applicator Directory: Google Maps API not loaded.');
       return;
     }
+
+    // Prevent double initialization
+    if (initialized) return;
+    initialized = true;
 
     map = new google.maps.Map(mapEl, {
       zoom: 4,
@@ -415,10 +422,42 @@
     updateMap();
   }
 
-  // Start
-  if (document.readyState === 'complete') {
-    init();
-  } else {
-    window.addEventListener('load', init);
+  // Start — handles normal page load, Elementor editor (AJAX), and Elementor frontend
+  var tryInitAttempts = 0;
+
+  function tryInit() {
+    // Wait for Google Maps to be available
+    if (typeof google === 'undefined' || !google.maps) {
+      // Retry up to 10 times (5 seconds) in case scripts are still loading (Elementor AJAX)
+      tryInitAttempts++;
+      if (tryInitAttempts < 10) {
+        setTimeout(tryInit, 500);
+      }
+      return;
+    }
+    var mapEl = document.getElementById('appdir-map');
+    if (mapEl) {
+      init();
+    }
   }
+
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    tryInit();
+  } else {
+    window.addEventListener('load', tryInit);
+  }
+
+  // Re-init when Elementor renders the widget via AJAX (editor preview)
+  if (typeof jQuery !== 'undefined') {
+    jQuery(document).on('elementor/frontend/init', function () {
+      if (typeof elementorFrontend !== 'undefined') {
+        elementorFrontend.hooks.addAction('frontend/element_ready/shortcode.default', function () {
+          tryInit();
+        });
+      }
+    });
+  }
+
+  // Also listen for generic Elementor widget render events
+  document.addEventListener('DOMContentLoaded', tryInit);
 })();

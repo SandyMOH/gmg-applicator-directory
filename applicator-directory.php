@@ -3,7 +3,7 @@
  * Plugin Name:       Applicator Directory
  * Plugin URI:        https://thermal-xr.com
  * Description:       Certified applicator directory with 3-tab search (All / Certified Sprayers / Spray Hubs). Uses ACF + Google Maps. Shortcode: [applicator_directory]
- * Version:           2.0.0
+ * Version:           2.1.0
  * Author:            Sandy Mohammad
  * License:           GPL v2 or later
  * Text Domain:       applicator-directory
@@ -11,7 +11,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'APPDIR_VERSION', '2.0.0' );
+define( 'APPDIR_VERSION', '2.1.0' );
 define( 'APPDIR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'APPDIR_URL', plugin_dir_url( __FILE__ ) );
 
@@ -36,6 +36,23 @@ class Applicator_Directory {
         add_filter( 'acf/settings/google_api_key', function() {
             return get_option( 'appdir_google_api_key', '' );
         });
+
+        // Elementor: ensure scripts are enqueued in editor preview (AJAX renders)
+        add_action( 'elementor/frontend/after_enqueue_scripts', array( $this, 'elementor_enqueue_scripts' ) );
+        add_action( 'elementor/preview/enqueue_scripts', array( $this, 'elementor_enqueue_scripts' ) );
+    }
+
+    /**
+     * Enqueue scripts when Elementor is rendering (editor or preview)
+     */
+    public function elementor_enqueue_scripts() {
+        // Only enqueue if the shortcode is likely used on this page
+        global $post;
+        if ( $post && ( has_shortcode( $post->post_content, 'applicator_directory' ) ||
+                        has_shortcode( $post->post_content, 'applicator_list' ) ) ) {
+            wp_enqueue_style( 'applicator-directory' );
+            wp_enqueue_script( 'applicator-directory' );
+        }
     }
 
     /**
@@ -269,7 +286,12 @@ class Applicator_Directory {
             </form>
             <hr>
             <h2>Shortcode</h2>
-            <p>Use <code>[applicator_directory]</code> in any Divi Code Module.</p>
+            <p>Use <code>[applicator_directory]</code> in any page builder:</p>
+            <ul>
+                <li><strong>Elementor:</strong> Add a <em>Shortcode</em> widget and paste <code>[applicator_directory]</code></li>
+                <li><strong>Divi:</strong> Add a <em>Code Module</em> and paste <code>[applicator_directory]</code></li>
+                <li><strong>Gutenberg:</strong> Add a <em>Shortcode</em> block</li>
+            </ul>
             <h2>Post Types</h2>
             <p><strong>Applicators</strong> (applicator) = Certified sprayers from Arlo sync</p>
             <p><strong>Spray Hubs</strong> (spray_hub) = Company branches (GPX, GMG, etc.) - enter manually</p>
