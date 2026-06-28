@@ -32,9 +32,9 @@ class Applicator_Directory {
         add_action( 'admin_menu', array( $this, 'add_settings_page' ) );
         add_action( 'admin_init', array( $this, 'register_settings' ) );
 
-        // ACF Google Maps API key Configuration
-        add_filter('acf/settings/google_api_key', function () {
-            return 'AIzaSyAnNNyXbvb1P8ttaw7EMD26Tv5ktBx_4RY';
+        // ACF Google Maps API key
+        add_filter( 'acf/settings/google_api_key', function() {
+            return get_option( 'appdir_google_api_key', '' );
         });
 
         // Elementor: ensure scripts are enqueued in editor preview (AJAX renders)
