@@ -40,6 +40,9 @@ class Applicator_Directory {
         // Elementor: ensure scripts are enqueued in editor preview (AJAX renders)
         add_action( 'elementor/frontend/after_enqueue_scripts', array( $this, 'elementor_enqueue_scripts' ) );
         add_action( 'elementor/preview/enqueue_scripts', array( $this, 'elementor_enqueue_scripts' ) );
+
+        // Auto-clear cache on plugin update (FTP/GitHub deploy)
+        add_action( 'plugins_loaded', array( $this, 'maybe_clear_cache_on_update' ) );
     }
 
     /**
@@ -299,6 +302,28 @@ class Applicator_Directory {
             <p>Sprayers are grouped under a hub when their <strong>company name + state</strong> match a hub entry.</p>
         </div>
         <?php
+    }
+
+    /**
+     * Clear W3 Total Cache when plugin version changes (detected after FTP deploy)
+     */
+    public function maybe_clear_cache_on_update() {
+        $stored = get_option( 'appdir_installed_version', '' );
+
+        if ( $stored === APPDIR_VERSION ) {
+            return; // same version, nothing to do
+        }
+
+        // Flush W3 Total Cache
+        if ( function_exists( 'w3tc_flush_all' ) ) {
+            w3tc_flush_all();
+        }
+
+        // Also flush WP object cache just in case
+        wp_cache_flush();
+
+        // Store the new version so this only runs once
+        update_option( 'appdir_installed_version', APPDIR_VERSION );
     }
 }
 
