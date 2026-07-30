@@ -1,5 +1,5 @@
 /**
- * Applicator Directory v3.1.0
+ * Applicator Directory v3.1.1
  * 3-tab layout: All / Certified Sprayers / Spray Hubs
  * Uses Google Maps API
  * Compatible with Elementor, Divi, and Gutenberg

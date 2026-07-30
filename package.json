@@ -1,6 +1,6 @@
 {
   "name": "gmg-applicator-directory",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Certified applicator directory with 3-tab search (All / Certified Sprayers / Spray Hubs). Uses ACF + Google Maps.",
   "author": "Sandy Mohammad",
   "license": "GPL-2.0-or-later",

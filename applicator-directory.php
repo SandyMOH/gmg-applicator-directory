@@ -3,7 +3,7 @@
  * Plugin Name:       Applicator Directory
  * Plugin URI:        https://thermal-xr.com
  * Description:       Certified applicator directory with 3-tab search (All / Certified Sprayers / Spray Hubs). Uses ACF + Google Maps. Shortcode: [applicator_directory]
- * Version:           3.1.0
+ * Version:           3.1.1
  * Author:            Sandy Mohammad
  * License:           GPL v2 or later
  * Text Domain:       applicator-directory
@@ -11,7 +11,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'APPDIR_VERSION', '3.1.0' );
+define( 'APPDIR_VERSION', '3.1.1' );
 define( 'APPDIR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'APPDIR_URL', plugin_dir_url( __FILE__ ) );
 
@@ -41,8 +41,10 @@ class Applicator_Directory {
         add_action( 'elementor/frontend/after_enqueue_scripts', array( $this, 'elementor_enqueue_scripts' ) );
         add_action( 'elementor/preview/enqueue_scripts', array( $this, 'elementor_enqueue_scripts' ) );
 
-        // Auto-clear cache on plugin update (FTP/GitHub deploy)
-        add_action( 'plugins_loaded', array( $this, 'maybe_clear_cache_on_update' ) );
+        // Auto-clear cache on plugin update (FTP/GitHub deploy).
+        // Runs on init, not plugins_loaded: W3 Total Cache is not finished
+        // booting that early and its flush API fatals on a null dispatcher.
+        add_action( 'init', array( $this, 'maybe_clear_cache_on_update' ), 20 );
     }
 
     /**
@@ -327,16 +329,22 @@ class Applicator_Directory {
             return; // same version, nothing to do
         }
 
-        // Flush W3 Total Cache
-        if ( function_exists( 'w3tc_flush_all' ) ) {
-            w3tc_flush_all();
-        }
+        // Record the version BEFORE flushing. If a cache plugin throws, the
+        // flush must not be retried on every subsequent request.
+        update_option( 'appdir_installed_version', APPDIR_VERSION );
 
-        // Also flush WP object cache just in case
+        // Flush the WP object cache
         wp_cache_flush();
 
-        // Store the new version so this only runs once
-        update_option( 'appdir_installed_version', APPDIR_VERSION );
+        // Flush W3 Total Cache. Its flush API depends on internals that are
+        // not always available, so a failure here must never take the site down.
+        if ( function_exists( 'w3tc_flush_all' ) ) {
+            try {
+                w3tc_flush_all();
+            } catch ( \Throwable $e ) {
+                error_log( 'Applicator Directory: W3TC cache flush failed - ' . $e->getMessage() );
+            }
+        }
     }
 }
 
