@@ -3,7 +3,7 @@
  * Plugin Name:       Applicator Directory
  * Plugin URI:        https://thermal-xr.com
  * Description:       Certified applicator directory with 3-tab search (All / Certified Sprayers / Spray Hubs). Uses ACF + Google Maps. Shortcode: [applicator_directory]
- * Version:           2.1.0
+ * Version:           3.1.0
  * Author:            Sandy Mohammad
  * License:           GPL v2 or later
  * Text Domain:       applicator-directory
@@ -11,7 +11,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'APPDIR_VERSION', '2.1.0' );
+define( 'APPDIR_VERSION', '3.1.0' );
 define( 'APPDIR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'APPDIR_URL', plugin_dir_url( __FILE__ ) );
 
@@ -92,10 +92,23 @@ class Applicator_Directory {
      * Register front-end assets
      */
     public function register_assets() {
+        // Poppins is the directory's display font. Return false from the filter
+        // to skip it and fall back to the theme / system font stack.
+        $font_url = apply_filters(
+            'appdir_font_url',
+            'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap'
+        );
+
+        $style_deps = array();
+        if ( $font_url ) {
+            wp_register_style( 'applicator-directory-font', $font_url, array(), null );
+            $style_deps[] = 'applicator-directory-font';
+        }
+
         wp_register_style(
             'applicator-directory',
             APPDIR_URL . 'assets/css/applicator.css',
-            array(),
+            $style_deps,
             APPDIR_VERSION
         );
 

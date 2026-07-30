@@ -1,9 +1,14 @@
 /**
- * Applicator Directory v3.1.0
+ * Applicator Directory
  * 3-tab layout: All / Certified Sprayers / Spray Hubs
  * Uses Google Maps API
  * Compatible with Elementor, Divi, and Gutenberg
+ *
+ * Styles are bundled via wp-scripts (extracted to build/style-index.css).
  */
+import './style.scss';
+
+/* eslint-disable no-undef */
 (function () {
   'use strict';
 
