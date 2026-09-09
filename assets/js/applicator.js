@@ -149,6 +149,7 @@
   }
 
   function flyToItem(id) {
+    if (!map) return;
     var m = markers.find(function (mk) { return mk._itemId === id; });
     if (m) {
       map.panTo(m.getPosition());
@@ -159,6 +160,7 @@
 
   // ===== Update map markers based on current tab + state =====
   function updateMap() {
+    if (!map) return;
     clearMarkers();
     var counter = 0;
 
@@ -410,31 +412,14 @@
     });
   }
 
-  // ===== Init =====
-  var initialized = false;
+  var uiReady = false;
+  var mapReady = false;
 
-  function init() {
-    var mapEl = document.getElementById('appdir-map');
-    if (!mapEl || typeof google === 'undefined' || !google.maps) {
-      console.warn('Applicator Directory: Google Maps API not loaded.');
-      return;
-    }
+  function initUI() {
+    if (uiReady) return;
+    if (!document.getElementById('appdir-list')) return;
+    uiReady = true;
 
-    // Prevent double initialization
-    if (initialized) return;
-    initialized = true;
-
-    map = new google.maps.Map(mapEl, {
-      zoom: 4,
-      center: { lat: -25.0, lng: 134.0 },
-      mapTypeControl: true,
-      streetViewControl: false,
-      fullscreenControl: true,
-    });
-
-    infoWindow = new google.maps.InfoWindow();
-
-    // Tab clicks
     document.querySelectorAll('.appdir-tab').forEach(function (tab) {
       tab.addEventListener('click', function () {
         document.querySelectorAll('.appdir-tab').forEach(function (t) { t.classList.remove('active'); });
@@ -447,7 +432,6 @@
       });
     });
 
-    // Search
     var searchInput = document.getElementById('appdir-search');
     if (searchInput) {
       searchInput.addEventListener('input', function () {
@@ -457,47 +441,60 @@
       });
     }
 
-    // Initial render
     renderList();
+  }
+
+  function initMap() {
+    if (mapReady) return;
+    var mapEl = document.getElementById('appdir-map');
+    if (!mapEl || typeof google === 'undefined' || !google.maps) return;
+    mapReady = true;
+
+    map = new google.maps.Map(mapEl, {
+      zoom: 4,
+      center: { lat: -25.0, lng: 134.0 },
+      mapTypeControl: true,
+      streetViewControl: false,
+      fullscreenControl: true,
+    });
+
+    infoWindow = new google.maps.InfoWindow();
     updateMap();
   }
 
-  // Start — handles normal page load, Elementor editor (AJAX), and Elementor frontend
-  var tryInitAttempts = 0;
-
-  function tryInit() {
-    // Wait for Google Maps to be available
+  var mapAttempts = 0;
+  function tryInitMap() {
+    if (mapReady) return;
     if (typeof google === 'undefined' || !google.maps) {
-      // Retry up to 10 times (5 seconds) in case scripts are still loading (Elementor AJAX)
-      tryInitAttempts++;
-      if (tryInitAttempts < 10) {
-        setTimeout(tryInit, 500);
-      }
+      if (++mapAttempts < 20) setTimeout(tryInitMap, 500);
       return;
     }
-    var mapEl = document.getElementById('appdir-map');
-    if (mapEl) {
-      init();
-    }
+    initMap();
+  }
+
+  function boot() {
+    initUI();
+    mapAttempts = 0;
+    tryInitMap();
   }
 
   if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    tryInit();
+    boot();
   } else {
-    window.addEventListener('load', tryInit);
+    document.addEventListener('DOMContentLoaded', boot);
   }
 
-  // Re-init when Elementor renders the widget via AJAX (editor preview)
+  // Complianz unblocks Maps after consent — no page reload needed
+  document.addEventListener('cmplz_run_after_all_scripts', function () {
+    mapAttempts = 0;
+    tryInitMap();
+  });
+
   if (typeof jQuery !== 'undefined') {
     jQuery(document).on('elementor/frontend/init', function () {
       if (typeof elementorFrontend !== 'undefined') {
-        elementorFrontend.hooks.addAction('frontend/element_ready/shortcode.default', function () {
-          tryInit();
-        });
+        elementorFrontend.hooks.addAction('frontend/element_ready/shortcode.default', boot);
       }
     });
   }
-
-  // Also listen for generic Elementor widget render events
-  document.addEventListener('DOMContentLoaded', tryInit);
 })();

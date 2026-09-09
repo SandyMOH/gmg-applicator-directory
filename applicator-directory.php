@@ -128,7 +128,7 @@ class Applicator_Directory {
         wp_register_script(
             'applicator-directory',
             APPDIR_URL . 'assets/js/applicator.js',
-            array( 'google-maps-api' ),
+            array(),
             APPDIR_VERSION,
             true
         );
@@ -144,6 +144,9 @@ class Applicator_Directory {
 
         wp_enqueue_style( 'applicator-directory' );
         wp_enqueue_script( 'applicator-directory' );
+        if ( wp_script_is( 'google-maps-api', 'registered' ) ) {
+            wp_enqueue_script( 'google-maps-api' );
+        }
 
         // ===== Query Certified Sprayers (applicator CPT) =====
         $sprayer_query = new WP_Query( array(
