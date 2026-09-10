@@ -5,6 +5,9 @@
 # Build output (generated in CI before deploy)
 /build/
 
+# Installable plugin ZIPs (npm run zip)
+/dist/
+
 # OS / editor
 .DS_Store
 Thumbs.db
