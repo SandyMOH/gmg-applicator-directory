@@ -207,6 +207,20 @@ body .elementor-widget-shortcode input[type="text"].appdir-search:focus {
 .appdir-list-panel {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+}
+
+.appdir-map-panel {
+  position: relative;
+  min-width: 0;
+  min-height: 320px;
+}
+
+.appdir-map-panel > div,
+#appdir-map {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 320px;
 }
 
 .appdir-list-scroll {

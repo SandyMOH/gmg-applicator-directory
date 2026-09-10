@@ -459,7 +459,38 @@
     });
 
     infoWindow = new google.maps.InfoWindow();
+    observeMapResize(mapEl);
     updateMap();
+  }
+
+  /**
+   * Google Maps sizes itself from the container at init time. If the panel is
+   * still collapsed (Elementor tab/accordion, fonts/layout not settled yet),
+   * the map paints small and anchored top-left. Re-trigger resize + refit
+   * whenever the container's box actually changes.
+   */
+  function observeMapResize(mapEl) {
+    var refit = function () {
+      if (!map) return;
+      google.maps.event.trigger(map, 'resize');
+      fitMapToMarkers();
+    };
+    var scheduled = false;
+    var schedule = function () {
+      if (scheduled) return;
+      scheduled = true;
+      window.requestAnimationFrame(function () {
+        scheduled = false;
+        refit();
+      });
+    };
+
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(schedule).observe(mapEl);
+    }
+    window.addEventListener('resize', schedule);
+    // One deferred pass covers browsers/layouts that settle after first paint.
+    setTimeout(refit, 300);
   }
 
   var mapAttempts = 0;
