@@ -1,6 +1,6 @@
 {
   "name": "gmg-applicator-directory",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "description": "Certified applicator directory with 3-tab search (All / Certified Sprayers / Spray Hubs). Uses ACF + Google Maps.",
   "author": "Sandy Mohammad",
   "license": "GPL-2.0-or-later",
@@ -8,6 +8,7 @@
   "scripts": {
     "build": "wp-scripts build",
     "start": "wp-scripts start",
+    "zip": "bash bin/make-zip.sh",
     "lint:js": "wp-scripts lint-js src",
     "lint:css": "wp-scripts lint-style \"src/**/*.scss\"",
     "format": "wp-scripts format \"src/**/*.{js,scss}\""
