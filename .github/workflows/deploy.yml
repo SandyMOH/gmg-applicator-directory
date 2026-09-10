@@ -22,7 +22,14 @@ jobs:
         run: |
           rm -rf .git .github README.md .gitignore
           ls -la
-
+      
+      - name: Debug server value
+        run: |
+          HOST='${{ secrets.SFTP_SERVER }}'
+          echo "length: ${#HOST}"
+          echo "looks like IPv4: $(echo "$HOST" | grep -Eq '^[0-9]{1,3}(\.[0-9]{1,3}){3}$' && echo YES || echo NO)"
+          getent hosts "$HOST" || echo "DNS FAILED"
+          
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
