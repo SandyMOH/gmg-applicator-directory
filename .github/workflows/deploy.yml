@@ -29,7 +29,8 @@ jobs:
           server: ${{ secrets.SFTP_SERVER }}
           username: ${{ secrets.SFTP_USERNAME }}
           password: ${{ secrets.SFTP_PASSWORD }}
-          # This action maps paths directly inside the SFTP root directory
+          port: 21
+          protocol: ftp
           server-dir: /public_html/wp-content/plugins/applicator-directory/
 
       - name: Deployment complete
