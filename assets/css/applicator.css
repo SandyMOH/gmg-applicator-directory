@@ -23,8 +23,17 @@
 }
 
 .appdir-wrapper {
+  display: block;
+  width: 100%;
   max-width: 1320px;
-  margin: 0 auto;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 20px;
+  padding-right: 20px;
+  /* Never shrink to content inside a flex/grid parent (Elementor containers) */
+  flex: 1 1 100%;
+  align-self: stretch;
+  justify-self: stretch;
   font-family: var(--appdir-font);
   color: var(--appdir-ink);
   -webkit-font-smoothing: antialiased;
@@ -180,9 +189,10 @@ body .elementor-widget-shortcode input[type="text"].appdir-search:focus {
 /* ===== Layout ===== */
 .appdir-layout {
   display: grid;
-  grid-template-columns: 440px 1fr;
+  grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
   gap: 28px;
   height: 660px;
+  width: 100%;
 }
 
 .appdir-list-panel,
@@ -571,6 +581,11 @@ body .elementor-widget-shortcode input[type="text"].appdir-search:focus {
 }
 
 @media (max-width: 560px) {
+  .appdir-wrapper {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
   .appdir-toolbar {
     flex-direction: column;
     align-items: stretch;
