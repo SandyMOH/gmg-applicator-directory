@@ -22,22 +22,14 @@ jobs:
         run: |
           rm -rf .git .github README.md .gitignore
           ls -la
-      
-      - name: Debug server value
-        run: |
-          HOST='${{ secrets.SFTP_SERVER }}'
-          echo "length: ${#HOST}"
-          echo "looks like IPv4: $(echo "$HOST" | grep -Eq '^[0-9]{1,3}(\.[0-9]{1,3}){3}$' && echo YES || echo NO)"
-          getent hosts "$HOST" || echo "DNS FAILED"
-          
+
       - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.SFTP_SERVER }}
           username: ${{ secrets.SFTP_USERNAME }}
           password: ${{ secrets.SFTP_PASSWORD }}
-          port: 21
-          protocol: ftp
+          # This action maps paths directly inside the SFTP root directory
           server-dir: /public_html/wp-content/plugins/applicator-directory/
 
       - name: Deployment complete
