@@ -35,6 +35,29 @@
         </div>
         <div class="appdir-map-panel">
             <div id="appdir-map" style="width:100%;height:100%;"></div>
+
+            <!-- Shown only while Google Maps is blocked by the cookie banner.
+                 Hidden by default so it never flashes when consent is already
+                 stored; applicator.js unhides it once it knows consent is
+                 missing. Sits alongside #appdir-map rather than inside it, so
+                 Google Maps keeps sole ownership of that container's DOM. -->
+            <div id="appdir-map-consent" class="appdir-map-consent" hidden>
+                <div class="appdir-map-consent-inner">
+                    <svg class="appdir-map-consent-icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <h3 class="appdir-map-consent-title">Map needs marketing cookies</h3>
+                    <p class="appdir-map-consent-text">
+                        This map is loaded from Google Maps, which we only load once you
+                        accept marketing cookies. Every listing is still available in the
+                        panel beside it.
+                    </p>
+                    <button type="button" class="appdir-map-consent-btn cmplz-manage-consent">
+                        Cookie preferences
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 

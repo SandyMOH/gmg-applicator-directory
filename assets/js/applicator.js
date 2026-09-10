@@ -1,5 +1,5 @@
 /**
- * Applicator Directory v3.2.2
+ * Applicator Directory v3.2.3
  * 3-tab layout: All / Certified Sprayers / Spray Hubs
  * Uses Google Maps API
  * Compatible with Elementor, Divi, and Gutenberg
@@ -415,6 +415,31 @@
   var uiReady = false;
   var mapReady = false;
 
+  // ===== Consent placeholder =====
+  // Complianz blocks the Google Maps script until the visitor accepts the
+  // "marketing" category. Because #appdir-map is a plain div rather than an
+  // iframe, Complianz never attaches its own blocked-content notice to it and
+  // the panel just renders empty -- so we show our own notice instead.
+  function marketingBlocked() {
+    if (mapReady) return false;
+    if (typeof google !== 'undefined' && google.maps) return false;
+    // Complianz absent, or its script not parsed yet: assume nothing is
+    // blocked. Failing this way round means the notice never flashes on a
+    // visit where consent is already stored and the map is about to load.
+    if (typeof window.cmplz_has_consent !== 'function') return false;
+    try {
+      return window.cmplz_has_consent('marketing') !== true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function updateConsentNotice() {
+    var el = document.getElementById('appdir-map-consent');
+    if (!el) return;
+    el.hidden = !marketingBlocked();
+  }
+
   function initUI() {
     if (uiReady) return;
     if (!document.getElementById('appdir-list')) return;
@@ -449,6 +474,7 @@
     var mapEl = document.getElementById('appdir-map');
     if (!mapEl || typeof google === 'undefined' || !google.maps) return;
     mapReady = true;
+    updateConsentNotice();
 
     map = new google.maps.Map(mapEl, {
       zoom: 4,
@@ -494,10 +520,15 @@
   }
 
   var mapAttempts = 0;
+  var mapPollTimer = null;
   function tryInitMap() {
     if (mapReady) return;
     if (typeof google === 'undefined' || !google.maps) {
-      if (++mapAttempts < 20) setTimeout(tryInitMap, 500);
+      updateConsentNotice();
+      // Consent events can re-enter this while a poll is already pending;
+      // drop the old timer so only one chain is ever in flight.
+      if (mapPollTimer) clearTimeout(mapPollTimer);
+      mapPollTimer = ++mapAttempts < 20 ? setTimeout(tryInitMap, 500) : null;
       return;
     }
     initMap();
@@ -515,10 +546,16 @@
     document.addEventListener('DOMContentLoaded', boot);
   }
 
-  // Complianz unblocks Maps after consent — no page reload needed
-  document.addEventListener('cmplz_run_after_all_scripts', function () {
-    mapAttempts = 0;
-    tryInitMap();
+  // Complianz unblocks Maps after consent — no page reload needed.
+  // cookie_warning_loaded is the first point where cmplz_has_consent() can be
+  // trusted; status_change / revoke cover accepting or denying later on.
+  ['cmplz_cookie_warning_loaded', 'cmplz_run_after_all_scripts',
+   'cmplz_status_change', 'cmplz_revoke'].forEach(function (evt) {
+    document.addEventListener(evt, function () {
+      mapAttempts = 0;
+      tryInitMap();
+      updateConsentNotice();
+    });
   });
 
   if (typeof jQuery !== 'undefined') {

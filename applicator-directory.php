@@ -3,7 +3,7 @@
  * Plugin Name:       Applicator Directory
  * Plugin URI:        https://thermal-xr.com
  * Description:       Certified applicator directory with 3-tab search (All / Certified Sprayers / Spray Hubs). Uses ACF + Google Maps. Shortcode: [applicator_directory]
- * Version:           3.2.2
+ * Version:           3.2.3
  * Author:            Sandy Mohammad
  * License:           GPL v2 or later
  * Text Domain:       applicator-directory
@@ -11,7 +11,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'APPDIR_VERSION', '3.2.2' );
+define( 'APPDIR_VERSION', '3.2.3' );
 define( 'APPDIR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'APPDIR_URL', plugin_dir_url( __FILE__ ) );
 

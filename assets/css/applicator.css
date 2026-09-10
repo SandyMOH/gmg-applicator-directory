@@ -1,5 +1,5 @@
 /* =============================================================
-   Applicator Directory v3.2.2
+   Applicator Directory v3.2.3
    Brand green #93d501 · Ink #1f2421
    ============================================================= */
 
@@ -242,6 +242,95 @@ body .elementor-widget-shortcode input[type="text"].appdir-search:focus {
   width: 100% !important;
   height: 100% !important;
   min-height: 320px;
+}
+
+/* ===== Map consent placeholder =====
+   Stands in for the map while Complianz has the Google Maps script blocked.
+   Overlays the whole panel rather than living inside #appdir-map, so it fills
+   exactly the area the map will occupy and nothing reflows when it goes. */
+.appdir-map-consent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 28px;
+  text-align: center;
+  background: var(--appdir-hover);
+  border-radius: var(--appdir-radius-panel);
+}
+
+/* Themes that reset [hidden] would otherwise leak the notice over a live map. */
+.appdir-map-consent[hidden] {
+  display: none !important;
+}
+
+.appdir-map-consent-inner {
+  max-width: 380px;
+}
+
+.appdir-map-consent-icon {
+  display: block;
+  margin: 0 auto 14px;
+  color: var(--appdir-green-dark);
+}
+
+.appdir-map-consent-title {
+  margin: 0 0 8px;
+  font-family: var(--appdir-font);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--appdir-ink);
+}
+
+.appdir-map-consent-text {
+  margin: 0 0 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--appdir-ink-2);
+}
+
+/* Same pill as .appdir-tab, filled with the accent because it is the one
+   action on the panel. Doubled selector for the theme-override specificity
+   the tabs already need. */
+body .appdir-wrapper button.appdir-map-consent-btn,
+body #appdir-wrapper button.appdir-map-consent-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 24px !important;
+  font-family: var(--appdir-font) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.5 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  color: var(--appdir-ink) !important;
+  background: var(--appdir-green) !important;
+  border: 1px solid var(--appdir-green) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+body .appdir-wrapper button.appdir-map-consent-btn:hover,
+body #appdir-wrapper button.appdir-map-consent-btn:hover {
+  background: var(--appdir-green-dark) !important;
+  border-color: var(--appdir-green-dark) !important;
+  color: var(--appdir-surface) !important;
+}
+
+.appdir-map-consent-btn:focus-visible {
+  outline: 2px solid var(--appdir-green-dark);
+  outline-offset: 2px;
 }
 
 .appdir-list-scroll {
@@ -633,6 +722,20 @@ body .elementor-widget-shortcode input[type="text"].appdir-search:focus {
   body .appdir-wrapper button.appdir-tab,
   body #appdir-wrapper button.appdir-tab {
     padding: 8px 14px !important;
+    font-size: 12px !important;
+  }
+
+  .appdir-map-consent {
+    padding: 20px;
+  }
+
+  .appdir-map-consent-title {
+    font-size: 15px;
+  }
+
+  body .appdir-wrapper button.appdir-map-consent-btn,
+  body #appdir-wrapper button.appdir-map-consent-btn {
+    padding: 9px 18px !important;
     font-size: 12px !important;
   }
 
