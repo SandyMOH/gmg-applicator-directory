@@ -3,7 +3,7 @@
  * Plugin Name:       Applicator Directory
  * Plugin URI:        https://thermal-xr.com
  * Description:       Certified applicator directory with 3-tab search (All / Certified Sprayers / Spray Hubs). Uses ACF + Google Maps. Shortcode: [applicator_directory]
- * Version:           3.3.0
+ * Version:           3.3.1
  * Author:            Sandy Mohammad
  * License:           GPL v2 or later
  * Text Domain:       applicator-directory
@@ -11,7 +11,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'APPDIR_VERSION', '3.3.0' );
+define( 'APPDIR_VERSION', '3.3.1' );
 define( 'APPDIR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'APPDIR_URL', plugin_dir_url( __FILE__ ) );
 
@@ -135,26 +135,54 @@ class Applicator_Directory {
     }
 
     /**
-     * Drop any second Google Maps API load on directory pages.
+     * Assets from the child theme's own, superseded, copy of this directory.
      *
-     * The gmg-elementor child theme registers its own Maps load under the
-     * 'gmg-google-maps' handle with a different API key, so the directory page
-     * pulls maps.googleapis.com twice. Google warns ("included multiple times")
-     * and the second bootstrap can leave google.maps defined but unusable,
-     * which is exactly the state initMap() has to survive. We keep our own
-     * handle because its key is the one this plugin's setting controls.
+     * gmg-elementor ships gmg-applicator-directory.js -- an older standalone
+     * build of this same feature -- and pulls in the Maps API for it under
+     * gmg-google-maps, with a different API key. Its markup
+     * ([data-gmg-applicator-directory]) is not on the page any more, so the
+     * script itself is inert, but the second Maps API load is not: Google
+     * warns "included multiple times", module loading breaks
+     * ("Loader.provide not called by module ..."), and LatLng objects minted
+     * by one API instance are rejected by the other, which is what produced
+     * the InvalidValueError storm and the blank map.
      *
-     * Filterable so the choice can be reversed without touching the plugin:
-     * return an empty array to keep the theme's copy and drop nothing.
+     * Dequeuing gmg-google-maps alone does not work -- gmg-applicator-directory
+     * depends on it, so WordPress re-adds it to satisfy that dependency. The
+     * inert directory script has to go first.
+     *
+     * Filterable: return an empty array to keep the theme's copies.
      */
-    public function dequeue_duplicate_maps() {
-        $handles = apply_filters( 'appdir_duplicate_maps_handles', array( 'gmg-google-maps' ) );
+    private function conflicting_handles() {
+        return (array) apply_filters( 'appdir_conflicting_handles', array(
+            'gmg-applicator-directory',
+            'gmg-google-maps',
+        ) );
+    }
 
-        foreach ( (array) $handles as $handle ) {
-            if ( $handle !== 'google-maps-api' && wp_script_is( $handle, 'enqueued' ) ) {
-                wp_dequeue_script( $handle );
+    /**
+     * Runs on wp_footer well before wp_print_footer_scripts() (priority 20),
+     * and late enough to catch anything enqueued after the shortcode rendered.
+     */
+    public function dequeue_conflicting_assets() {
+        foreach ( $this->conflicting_handles() as $handle ) {
+            // Never let a filter turn this on our own assets.
+            if ( in_array( $handle, array( 'applicator-directory', 'google-maps-api' ), true ) ) {
+                continue;
             }
+            wp_dequeue_script( $handle );
         }
+    }
+
+    /**
+     * Safety net at print time, after dependency resolution has had its say:
+     * whatever survives dequeuing, emit nothing for it.
+     */
+    public function suppress_conflicting_tag( $tag, $handle ) {
+        if ( in_array( $handle, array( 'applicator-directory', 'google-maps-api' ), true ) ) {
+            return $tag;
+        }
+        return in_array( $handle, $this->conflicting_handles(), true ) ? '' : $tag;
     }
 
     /**
@@ -171,10 +199,9 @@ class Applicator_Directory {
             wp_enqueue_script( 'google-maps-api' );
         }
 
-        // Only on pages that actually render the directory. Late enough that
-        // anything enqueued after the shortcode ran is still caught, but well
-        // before wp_print_footer_scripts() (wp_footer, priority 20) emits.
-        add_action( 'wp_footer', array( $this, 'dequeue_duplicate_maps' ), 5 );
+        // Only on pages that actually render the directory.
+        add_action( 'wp_footer', array( $this, 'dequeue_conflicting_assets' ), 5 );
+        add_filter( 'script_loader_tag', array( $this, 'suppress_conflicting_tag' ), 99, 2 );
 
         // ===== Query Certified Sprayers (applicator CPT) =====
         $sprayer_query = new WP_Query( array(
