@@ -3,7 +3,7 @@
  * Plugin Name:       Applicator Directory
  * Plugin URI:        https://thermal-xr.com
  * Description:       Certified applicator directory with 3-tab search (All / Certified Sprayers / Spray Hubs). Uses ACF + Google Maps. Shortcode: [applicator_directory]
- * Version:           3.2.3
+ * Version:           3.3.0
  * Author:            Sandy Mohammad
  * License:           GPL v2 or later
  * Text Domain:       applicator-directory
@@ -11,7 +11,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-define( 'APPDIR_VERSION', '3.2.3' );
+define( 'APPDIR_VERSION', '3.3.0' );
 define( 'APPDIR_PATH', plugin_dir_path( __FILE__ ) );
 define( 'APPDIR_URL', plugin_dir_url( __FILE__ ) );
 
@@ -135,6 +135,29 @@ class Applicator_Directory {
     }
 
     /**
+     * Drop any second Google Maps API load on directory pages.
+     *
+     * The gmg-elementor child theme registers its own Maps load under the
+     * 'gmg-google-maps' handle with a different API key, so the directory page
+     * pulls maps.googleapis.com twice. Google warns ("included multiple times")
+     * and the second bootstrap can leave google.maps defined but unusable,
+     * which is exactly the state initMap() has to survive. We keep our own
+     * handle because its key is the one this plugin's setting controls.
+     *
+     * Filterable so the choice can be reversed without touching the plugin:
+     * return an empty array to keep the theme's copy and drop nothing.
+     */
+    public function dequeue_duplicate_maps() {
+        $handles = apply_filters( 'appdir_duplicate_maps_handles', array( 'gmg-google-maps' ) );
+
+        foreach ( (array) $handles as $handle ) {
+            if ( $handle !== 'google-maps-api' && wp_script_is( $handle, 'enqueued' ) ) {
+                wp_dequeue_script( $handle );
+            }
+        }
+    }
+
+    /**
      * Main shortcode render
      */
     public function render_shortcode( $atts ) {
@@ -147,6 +170,11 @@ class Applicator_Directory {
         if ( wp_script_is( 'google-maps-api', 'registered' ) ) {
             wp_enqueue_script( 'google-maps-api' );
         }
+
+        // Only on pages that actually render the directory. Late enough that
+        // anything enqueued after the shortcode ran is still caught, but well
+        // before wp_print_footer_scripts() (wp_footer, priority 20) emits.
+        add_action( 'wp_footer', array( $this, 'dequeue_duplicate_maps' ), 5 );
 
         // ===== Query Certified Sprayers (applicator CPT) =====
         $sprayer_query = new WP_Query( array(

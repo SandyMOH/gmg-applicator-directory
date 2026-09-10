@@ -1,5 +1,5 @@
 /* =============================================================
-   Applicator Directory v3.2.3
+   Applicator Directory v3.3.0
    Brand green #93d501 · Ink #1f2421
    ============================================================= */
 
@@ -331,6 +331,25 @@ body #appdir-wrapper button.appdir-map-consent-btn:hover {
 .appdir-map-consent-btn:focus-visible {
   outline: 2px solid var(--appdir-green-dark);
   outline-offset: 2px;
+}
+
+/* Loading mode: consent is granted but Maps has not painted yet. Keeps the
+   panel from falling back to a bare white box in that window. */
+.appdir-map-consent-loading {
+  display: none;
+  margin: 0;
+  font-size: 13px;
+  color: var(--appdir-ink-2);
+}
+
+.appdir-map-consent.is-loading .appdir-map-consent-title,
+.appdir-map-consent.is-loading .appdir-map-consent-text,
+.appdir-map-consent.is-loading .appdir-map-consent-btn {
+  display: none !important;
+}
+
+.appdir-map-consent.is-loading .appdir-map-consent-loading {
+  display: block;
 }
 
 .appdir-list-scroll {

@@ -1,5 +1,5 @@
 /**
- * Applicator Directory v3.2.3
+ * Applicator Directory v3.3.0
  * 3-tab layout: All / Certified Sprayers / Spray Hubs
  * Uses Google Maps API
  * Compatible with Elementor, Divi, and Gutenberg
@@ -434,10 +434,35 @@
     }
   }
 
+  // Grace before the loading state appears. Longer than a normal poll cycle,
+  // so a map that loads promptly never flashes it.
+  var MAP_LOADING_GRACE_MS = 1500;
+  var pendingSince = null;
+
   function updateConsentNotice() {
     var el = document.getElementById('appdir-map-consent');
     if (!el) return;
-    el.hidden = !marketingBlocked();
+
+    if (marketingBlocked()) {
+      pendingSince = null;
+      el.classList.remove('is-loading');
+      el.hidden = false;
+      return;
+    }
+
+    if (mapReady) {
+      pendingSince = null;
+      el.hidden = true;
+      return;
+    }
+
+    // Nothing is blocking Maps, but it has not painted yet -- it is still
+    // loading, or the API came up unusable. Hold the panel rather than
+    // dropping back to an empty box, once the grace period has passed.
+    if (pendingSince === null) pendingSince = Date.now();
+    var waited = Date.now() - pendingSince >= MAP_LOADING_GRACE_MS;
+    el.classList.toggle('is-loading', waited);
+    el.hidden = !waited;
   }
 
   function initUI() {
@@ -473,18 +498,27 @@
     if (mapReady) return;
     var mapEl = document.getElementById('appdir-map');
     if (!mapEl || typeof google === 'undefined' || !google.maps) return;
+
+    // Build the map before latching mapReady. google.maps can be defined but
+    // not yet usable -- the classic symptom of the API being loaded twice --
+    // and latching first would make every later attempt return early forever.
+    try {
+      map = new google.maps.Map(mapEl, {
+        zoom: 4,
+        center: { lat: -25.0, lng: 134.0 },
+        mapTypeControl: true,
+        streetViewControl: false,
+        fullscreenControl: true,
+      });
+      infoWindow = new google.maps.InfoWindow();
+    } catch (e) {
+      map = null;
+      infoWindow = null;
+      return;
+    }
+
     mapReady = true;
     updateConsentNotice();
-
-    map = new google.maps.Map(mapEl, {
-      zoom: 4,
-      center: { lat: -25.0, lng: 134.0 },
-      mapTypeControl: true,
-      streetViewControl: false,
-      fullscreenControl: true,
-    });
-
-    infoWindow = new google.maps.InfoWindow();
     observeMapResize(mapEl);
     updateMap();
   }
@@ -519,19 +553,30 @@
     setTimeout(refit, 300);
   }
 
+  // 20 x 500ms = a bounded 10s window per trigger. The counter is reset on
+  // every consent event, so an exhausted run never blocks a later one.
+  var MAX_MAP_ATTEMPTS = 20;
   var mapAttempts = 0;
   var mapPollTimer = null;
+
   function tryInitMap() {
     if (mapReady) return;
-    if (typeof google === 'undefined' || !google.maps) {
-      updateConsentNotice();
-      // Consent events can re-enter this while a poll is already pending;
-      // drop the old timer so only one chain is ever in flight.
-      if (mapPollTimer) clearTimeout(mapPollTimer);
-      mapPollTimer = ++mapAttempts < 20 ? setTimeout(tryInitMap, 500) : null;
-      return;
-    }
     initMap();
+    if (mapReady) return;
+
+    // Still not up: either the Maps script has not finished loading, or the
+    // constructor threw. Both are worth another look shortly.
+    updateConsentNotice();
+    // Consent events can re-enter this while a poll is already pending;
+    // drop the old timer so only one chain is ever in flight.
+    if (mapPollTimer) clearTimeout(mapPollTimer);
+    mapPollTimer = ++mapAttempts < MAX_MAP_ATTEMPTS ? setTimeout(tryInitMap, 500) : null;
+  }
+
+  function onConsentEvent() {
+    mapAttempts = 0;
+    tryInitMap();
+    updateConsentNotice();
   }
 
   function boot() {
@@ -547,15 +592,21 @@
   }
 
   // Complianz unblocks Maps after consent — no page reload needed.
-  // cookie_warning_loaded is the first point where cmplz_has_consent() can be
-  // trusted; status_change / revoke cover accepting or denying later on.
-  ['cmplz_cookie_warning_loaded', 'cmplz_run_after_all_scripts',
-   'cmplz_status_change', 'cmplz_revoke'].forEach(function (evt) {
-    document.addEventListener(evt, function () {
-      mapAttempts = 0;
-      tryInitMap();
-      updateConsentNotice();
-    });
+  //
+  // cmplz_enable_category is the reliable one: Complianz dispatches it from
+  // cmplz_run_after_all_scripts() for each newly enabled category, on both the
+  // banner and the preferences-dialog path. cmplz_run_after_all_scripts is
+  // gated behind cmplz_all_scripts_hook_fired, so it fires at most once per
+  // consent change and can be missed. cookie_warning_loaded is the first point
+  // where cmplz_has_consent() can be trusted; status_change / revoke cover
+  // later changes either way. All of them are cheap and idempotent here.
+  //
+  // Note the unblocked <script> is only *inserted* before these fire, not
+  // executed, so google.maps is still absent in the handler — the bounded
+  // retry in tryInitMap() is what actually catches it.
+  ['cmplz_enable_category', 'cmplz_status_change', 'cmplz_run_after_all_scripts',
+   'cmplz_cookie_warning_loaded', 'cmplz_revoke'].forEach(function (evt) {
+    document.addEventListener(evt, onConsentEvent);
   });
 
   if (typeof jQuery !== 'undefined') {

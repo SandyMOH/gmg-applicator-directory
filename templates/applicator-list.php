@@ -56,6 +56,7 @@
                     <button type="button" class="appdir-map-consent-btn cmplz-manage-consent">
                         Cookie preferences
                     </button>
+                    <p class="appdir-map-consent-loading">Loading map&hellip;</p>
                 </div>
             </div>
         </div>
